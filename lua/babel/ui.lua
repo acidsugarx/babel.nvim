@@ -8,13 +8,19 @@ local PICKER_PRIORITY = { "telescope", "fzf", "snacks", "mini" }
 -- Check if a picker is available
 local function picker_available(name)
   local checks = {
-    telescope = function() return pcall(require, "telescope") end,
-    fzf = function() return pcall(require, "fzf-lua") end,
+    telescope = function()
+      return pcall(require, "telescope")
+    end,
+    fzf = function()
+      return pcall(require, "fzf-lua")
+    end,
     snacks = function()
       local ok, snacks = pcall(require, "snacks")
       return ok and snacks.picker ~= nil
     end,
-    mini = function() return pcall(require, "mini.pick") end,
+    mini = function()
+      return pcall(require, "mini.pick")
+    end,
   }
   return checks[name] and checks[name]()
 end
@@ -44,9 +50,9 @@ end
 
 ---Show translation in focusable floating window
 ---@param text string Translated text
----@param original string Original text
+---@param _original string Original text (reserved for future use)
 ---@param opts? BabelFloatOptions
-function M.show_float(text, original, opts)
+function M.show_float(text, _original, opts)
   opts = opts or config.options.float
   local lines = vim.split(text, "\n")
 
@@ -106,8 +112,8 @@ end
 
 ---Show translation using Telescope
 ---@param text string Translated text
----@param original string Original text
-function M.show_telescope(text, original)
+---@param _original string Original text (reserved for future use)
+function M.show_telescope(text, _original)
   -- Use Telescope's preview window as simple text display
   local pickers = require("telescope.pickers")
   local finders = require("telescope.finders")
@@ -116,27 +122,29 @@ function M.show_telescope(text, original)
 
   local lines = vim.split(text, "\n")
 
-  pickers.new({}, {
-    prompt_title = "Babel Translation",
-    finder = finders.new_table({
-      results = lines,
-    }),
-    sorter = conf.generic_sorter({}),
-    attach_mappings = function(prompt_bufnr)
-      actions.select_default:replace(function()
-        actions.close(prompt_bufnr)
-        vim.fn.setreg("+", text)
-        vim.notify("Translation copied to clipboard", vim.log.levels.INFO)
-      end)
-      return true
-    end,
-  }):find()
+  pickers
+    .new({}, {
+      prompt_title = "Babel Translation",
+      finder = finders.new_table({
+        results = lines,
+      }),
+      sorter = conf.generic_sorter({}),
+      attach_mappings = function(prompt_bufnr)
+        actions.select_default:replace(function()
+          actions.close(prompt_bufnr)
+          vim.fn.setreg("+", text)
+          vim.notify("Translation copied to clipboard", vim.log.levels.INFO)
+        end)
+        return true
+      end,
+    })
+    :find()
 end
 
 ---Show translation using fzf-lua
 ---@param text string Translated text
----@param original string Original text
-function M.show_fzf(text, original)
+---@param _original string Original text (reserved for future use)
+function M.show_fzf(text, _original)
   local fzf = require("fzf-lua")
   local lines = vim.split(text, "\n")
 
@@ -153,12 +161,12 @@ end
 
 ---Show translation using Snacks window
 ---@param text string Translated text
----@param original string Original text
-function M.show_snacks(text, original)
+---@param _original string Original text (reserved for future use)
+function M.show_snacks(text, _original)
   local snacks = require("snacks")
   local lines = vim.split(text, "\n")
 
-  local win = snacks.win({
+  snacks.win({
     title = " Translation ",
     title_pos = "center",
     text = lines,
@@ -188,8 +196,8 @@ end
 
 ---Show translation using mini.pick
 ---@param text string Translated text
----@param original string Original text
-function M.show_mini(text, original)
+---@param _original string Original text (reserved for future use)
+function M.show_mini(text, _original)
   local pick = require("mini.pick")
   local lines = vim.split(text, "\n")
 

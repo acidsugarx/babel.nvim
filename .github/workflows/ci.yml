@@ -1,0 +1,108 @@
+name: CI
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
+
+jobs:
+  style:
+    name: Style
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check formatting with StyLua
+        uses: JohnnyMorganz/stylua-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: 2.1.0
+          args: --check .
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install selene
+        run: |
+          curl -sL https://github.com/Kampfkarren/selene/releases/download/0.27.1/selene-0.27.1-linux.zip -o selene.zip
+          unzip selene.zip
+          sudo mv selene /usr/local/bin/
+
+      - name: Install typos
+        uses: crate-ci/typos@master
+
+      - name: Run selene
+        run: |
+          selene lua/ 2>&1 | tee selene_output.txt
+          if grep -q "^Results:" selene_output.txt && grep -q "0 errors" selene_output.txt; then
+            echo "Selene passed (warnings are allowed)"
+          else
+            exit 1
+          fi
+
+      - name: Run typos
+        run: typos lua/
+
+  # test:
+  #   name: Test
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 10
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Install Neovim
+  #       run: |
+  #         mkdir -p _neovim
+  #         curl -sL https://github.com/neovim/neovim/releases/download/stable/nvim-linux64.tar.gz | tar xzf - --strip-components=1 -C _neovim
+  #
+  #     - name: Run tests
+  #       run: |
+  #         export PATH="${PWD}/_neovim/bin:${PATH}"
+  #         make test
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [style, lint]
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Prepare environment
+        run: |
+          echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+          echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Generate release notes
+        run: python scripts/release_notes.py > RELEASE_NOTES.md
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          body_path: RELEASE_NOTES.md
+          prerelease: ${{ contains(env.TAG, 'rc') || contains(env.TAG, 'beta') || contains(env.TAG, 'alpha') }}

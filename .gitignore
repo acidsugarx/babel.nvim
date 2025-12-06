@@ -1,0 +1,22 @@
+# Dependencies (cloned for testing)
+deps/
+
+# Neovim
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.code-workspace
+
+# Logs
+*.log
+
+# Local development
+.local/
+.cache/

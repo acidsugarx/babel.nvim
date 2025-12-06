@@ -155,10 +155,13 @@ require("babel").setup({
 
 ## 🌐 Providers
 
-| Provider | Status | Notes |
-|----------|:------:|-------|
-| Google Translate | ✅ | Default, no API key needed |
-| Yandex | 🔜 | Planned |
+| Provider | Status | API Key | Notes |
+|----------|:------:|:-------:|-------|
+| Google Translate | ✅ | No | Default, unofficial API |
+| [DeepL](https://deepl.com) | 🔜 | Yes (free tier) | Best quality, 500k chars/month free |
+| [LibreTranslate](https://libretranslate.com) | 🔜 | No | Open source, self-hostable |
+| [Yandex](https://translate.yandex.ru) | 🔜 | Yes | Great for Russian |
+| [Lingva](https://lingva.ml) | 🔜 | No | Google proxy, no rate limits |
 
 ## 🤝 Contributing
 
