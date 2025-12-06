@@ -41,9 +41,6 @@ jobs:
           chmod +x selene
           sudo mv selene /usr/local/bin/
 
-      - name: Install typos
-        uses: crate-ci/typos@master
-
       - name: Run selene
         run: |
           selene lua/ 2>&1 | tee selene_output.txt
@@ -53,8 +50,10 @@ jobs:
             exit 1
           fi
 
-      - name: Run typos
-        run: typos lua/
+      - name: Check typos
+        uses: crate-ci/typos@master
+        with:
+          files: lua/
 
   # test:
   #   name: Test
