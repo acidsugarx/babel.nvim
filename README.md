@@ -39,6 +39,7 @@
 - `curl`
 
 **Optional** (for picker display):
+
 - snacks.nvim, telescope.nvim, fzf-lua, or mini.pick
 
 ## 📦 Installation
@@ -77,7 +78,7 @@ require("babel").setup({
 require("babel").setup({
   source = "auto",        -- source language (auto-detect)
   target = "ru",          -- target language
-  provider = "google",    -- translation provider
+  provider = "google",    -- translation provider: "google", "deepl"
   display = "float",      -- "float" or "picker"
   picker = "auto",        -- "auto", "telescope", "fzf", "snacks", "mini"
   float = {
@@ -88,6 +89,12 @@ require("babel").setup({
   keymaps = {
     translate = "<leader>tr",
     translate_word = "<leader>tw",
+  },
+  -- DeepL provider settings (optional)
+  deepl = {
+    api_key = nil,        -- or use DEEPL_API_KEY env variable
+    pro = nil,            -- nil = auto-detect, true = Pro, false = Free
+    formality = "default", -- "default", "more", "less", "prefer_more", "prefer_less"
   },
 })
 ```
@@ -100,9 +107,12 @@ require("babel").setup({
 |--------|------|---------|-------------|
 | `source` | string | `"auto"` | Source language (auto-detect) |
 | `target` | string | `"ru"` | Target language code |
-| `provider` | string | `"google"` | Translation provider |
+| `provider` | string | `"google"` | Translation provider: `"google"`, `"deepl"` |
 | `display` | string | `"float"` | Display mode: `"float"` or `"picker"` |
 | `picker` | string | `"auto"` | Picker: `"auto"`, `"telescope"`, `"fzf"`, `"snacks"`, `"mini"` |
+| `deepl.api_key` | string | `nil` | DeepL API key (or use `DEEPL_API_KEY` env) |
+| `deepl.pro` | boolean | `nil` | Force Pro/Free endpoint (`nil` = auto-detect by key) |
+| `deepl.formality` | string | `"default"` | Formality: `"default"`, `"more"`, `"less"`, `"prefer_more"`, `"prefer_less"` |
 
 ### Language Codes
 
@@ -158,10 +168,40 @@ require("babel").setup({
 | Provider | Status | API Key | Notes |
 |----------|:------:|:-------:|-------|
 | Google Translate | ✅ | No | Default, unofficial API |
-| [DeepL](https://deepl.com) | 🔜 | Yes (free tier) | Best quality, 500k chars/month free |
+| [DeepL](https://deepl.com) | 🧪 | Yes (free tier) | Best quality, 500k chars/month free |
 | [LibreTranslate](https://libretranslate.com) | 🔜 | No | Open source, self-hostable |
 | [Yandex](https://translate.yandex.ru) | 🔜 | Yes | Great for Russian |
 | [Lingva](https://lingva.ml) | 🔜 | No | Google proxy, no rate limits |
+
+> **🧪 Testing:** DeepL provider is implemented but needs testing. If you have a DeepL API key and want to help test, please [open an issue](https://github.com/acidsugarx/babel.nvim/issues) with your feedback!
+
+<details>
+<summary>DeepL Setup</summary>
+
+1. Get a free API key at [deepl.com/pro#developer](https://www.deepl.com/pro#developer) (500k chars/month free)
+
+2. Set up the API key (choose one):
+
+   **Option A:** Environment variable
+   ```bash
+   export DEEPL_API_KEY="your-api-key-here"
+   ```
+
+   **Option B:** In config
+   ```lua
+   require("babel").setup({
+     provider = "deepl",
+     deepl = {
+       api_key = "your-api-key-here",
+     },
+   })
+   ```
+
+3. The endpoint (Free/Pro) is auto-detected from the key suffix (`:fx` = Free). You can override with `deepl.pro = true/false`.
+
+4. If no API key is found, babel.nvim will automatically fall back to Google Translate with a warning.
+
+</details>
 
 ## 🤝 Contributing
 

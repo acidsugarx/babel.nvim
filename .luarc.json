@@ -1,9 +1,11 @@
 {
   "runtime": {
-    "version": "LuaJIT"
+    "version": "LuaJIT",
+    "pathStrict": true
   },
   "diagnostics": {
-    "globals": ["vim"]
+    "globals": ["vim"],
+    "disable": ["missing-fields"]
   },
   "workspace": {
     "library": [
@@ -11,5 +13,18 @@
       "${3rd}/luv/library"
     ],
     "checkThirdParty": false
+  },
+  "hint": {
+    "enable": true,
+    "setType": true,
+    "paramName": "All",
+    "paramType": true,
+    "arrayIndex": "Enable"
+  },
+  "completion": {
+    "callSnippet": "Replace"
+  },
+  "type": {
+    "castNumberToInteger": true
   }
 }

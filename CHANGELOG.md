@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- DeepL provider with API key support (config or `DEEPL_API_KEY` env) — **🧪 experimental, may not work as expected**
+- Auto-detect DeepL Free/Pro endpoint by key suffix (`:fx`)
+- DeepL formality option (`default`, `more`, `less`, `prefer_more`, `prefer_less`)
+- Automatic fallback to Google Translate when DeepL API key is missing
+
 ## [0.1.0] - 2025-12-07
 
 ### Added
