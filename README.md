@@ -49,6 +49,7 @@
 ```lua
 {
   "acidsugarx/babel.nvim",
+  version = "*", -- recomended for the latest tag, not main
   opts = {
     target = "ru",  -- target language
   },
