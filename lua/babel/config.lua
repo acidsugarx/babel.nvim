@@ -6,10 +6,16 @@
 ---@field options BabelOptions Current settings (after setup)
 ---@field setup fun(opts?: BabelOptions) Initialization function
 
+---@class BabelDeeplOptions Deepl provider settings
+---@field api_key? string API key (overrides DEEPL_API_KEY env)
+---@field pro? boolean Force Pro endpoint (auto-detect by default)
+---@field formality? "default"|"more"|"less"|"prefer_more"|"prefer_less"
+
 ---@class BabelOptions Plugin settings
+---@field deepl? BabelDeeplOptions
 ---@field source string Source language ('auto' = auto-detect)
 ---@field target string Target language ('ru', 'en', etc.)
----@field provider string Translation provider ('google', 'yandex')
+---@field provider string Translation provider ('google', 'deepl')
 ---@field display "float"|"picker" Display mode ('float' = floating window, 'picker' = use picker)
 ---@field picker "auto"|"telescope"|"fzf"|"snacks"|"mini" Picker to use (when display = "picker")
 ---@field float BabelFloatOptions Floating window options
@@ -44,6 +50,11 @@ local defaults = {
   keymaps = {
     translate = "<leader>tr",
     translate_word = "<leader>tw",
+  },
+  deepl = {
+    api_key = nil, -- use DEEPL_API_KEY env
+    pro = nil, -- auto-detect by key suffix
+    formality = "default",
   },
 }
 

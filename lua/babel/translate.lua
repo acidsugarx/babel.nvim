@@ -6,6 +6,7 @@ local ui = require("babel.ui")
 -- Provider registry
 local providers = {
   google = require("babel.providers.google"),
+  deepl = require("babel.providers.deepl"),
 }
 
 ---Get providers by name
@@ -32,10 +33,20 @@ function M.translate(text)
 
   provider.translate(text, opts.source, opts.target, function(result, err)
     if err then
+      if opts.provider == "deepl" and err:match("API key") then
+        vim.notify("Babel: DeepL API key not found, falling back to Google", vim.log.levels.WARN)
+        providers.google.translate(text, opts.source, opts.target, function(r, e)
+          if e then
+            vim.notify("Babel: " .. e, vim.log.levels.ERROR)
+            return
+          end
+          ui.show(r, text)
+        end)
+        return
+      end
       vim.notify("Babel: " .. err, vim.log.levels.ERROR)
       return
     end
-    -- Pass both translated and original text to UI
     ui.show(result, text)
   end)
 end
