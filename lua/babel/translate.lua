@@ -6,6 +6,8 @@ local ui = require("babel.ui")
 local state = {
   last_text = nil,
   history = {},
+  cache = {},
+  cache_keys = {},
 }
 
 -- Provider registry
@@ -46,6 +48,93 @@ local function is_deepl_missing_key(err)
   end
 
   return tostring(err or ""):match("API key") ~= nil
+end
+
+local function get_cache_opts()
+  return config.options.cache or {}
+end
+
+local function get_cache_limit()
+  local cache_opts = get_cache_opts()
+  local limit = tonumber(cache_opts.limit) or 200
+
+  if limit < 1 then
+    return 1
+  end
+
+  return math.floor(limit)
+end
+
+local function is_cache_enabled()
+  local cache_opts = get_cache_opts()
+  return cache_opts.enabled == true
+end
+
+local function normalize_chain(primary_provider)
+  local chain_by_provider = config.options.fallback_chain or {}
+  local provider_chain = chain_by_provider[primary_provider]
+  if type(provider_chain) ~= "table" then
+    return {}
+  end
+
+  local seen = {}
+  local chain = {}
+
+  for _, provider_name in ipairs(provider_chain) do
+    if
+      type(provider_name) == "string"
+      and provider_name ~= ""
+      and provider_name ~= primary_provider
+      and not seen[provider_name]
+    then
+      table.insert(chain, provider_name)
+      seen[provider_name] = true
+    end
+  end
+
+  return chain
+end
+
+local function cache_key(opts, text)
+  if not is_cache_enabled() then
+    return nil
+  end
+
+  local payload = {
+    provider = opts.provider,
+    source = opts.source,
+    target = opts.target,
+    text = text,
+    deepl_formality = (opts.deepl or {}).formality,
+  }
+
+  return vim.json.encode(payload)
+end
+
+local function cache_get(key)
+  if not key then
+    return nil
+  end
+
+  return state.cache[key]
+end
+
+local function cache_set(key, entry)
+  if not key then
+    return
+  end
+
+  if state.cache[key] == nil then
+    table.insert(state.cache_keys, key)
+  end
+
+  state.cache[key] = entry
+
+  local limit = get_cache_limit()
+  while #state.cache_keys > limit do
+    local old_key = table.remove(state.cache_keys, 1)
+    state.cache[old_key] = nil
+  end
 end
 
 local function get_history_opts()
@@ -90,10 +179,19 @@ local function push_history_entry(original, translated, provider_name, source, t
   end
 end
 
-local function handle_success(result, original, provider_name, opts)
+local function handle_success(result, original, provider_name, opts, meta)
+  meta = meta or {}
+
   if type(result) ~= "string" or result == "" then
     vim.notify("Babel: " .. provider_title(provider_name) .. ": empty translation result", vim.log.levels.ERROR)
     return
+  end
+
+  if not meta.from_cache and meta.cache_key then
+    cache_set(meta.cache_key, {
+      result = result,
+      provider = provider_name,
+    })
   end
 
   push_history_entry(original, result, provider_name, opts.source, opts.target)
@@ -104,10 +202,11 @@ end
 ---@param text string Text to translate
 function M.translate(text)
   local opts = config.options
-  local provider = get_provider(opts.provider)
+  local primary_provider = opts.provider
+  local provider = get_provider(primary_provider)
 
   if not provider then
-    vim.notify("Babel: Unknown provider: " .. opts.provider, vim.log.levels.ERROR)
+    vim.notify("Babel: Unknown provider: " .. primary_provider, vim.log.levels.ERROR)
     return
   end
   if text == "" then
@@ -117,27 +216,72 @@ function M.translate(text)
 
   state.last_text = text
 
-  provider.translate(text, opts.source, opts.target, function(result, err)
-    if err then
-      if opts.provider == "deepl" and is_deepl_missing_key(err) then
-        vim.notify("Babel: DeepL API key not found, falling back to Google", vim.log.levels.WARN)
-        providers.google.translate(text, opts.source, opts.target, function(r, e)
-          if e then
-            vim.notify("Babel: " .. normalize_provider_error("google", e), vim.log.levels.ERROR)
-            return
-          end
+  local key = cache_key(opts, text)
+  local cached_entry = cache_get(key)
+  if cached_entry then
+    handle_success(cached_entry.result, text, cached_entry.provider or primary_provider, opts, {
+      from_cache = true,
+    })
+    return
+  end
 
-          handle_success(r, text, "google", opts)
-        end)
-        return
-      end
+  local fallback_chain = normalize_chain(primary_provider)
 
-      vim.notify("Babel: " .. normalize_provider_error(opts.provider, err), vim.log.levels.ERROR)
+  local providers_to_try = { primary_provider }
+  for _, provider_name in ipairs(fallback_chain) do
+    table.insert(providers_to_try, provider_name)
+  end
+
+  local function attempt(index)
+    local provider_name = providers_to_try[index]
+    if provider_name == nil then
       return
     end
 
-    handle_success(result, text, opts.provider, opts)
-  end)
+    local current_provider = get_provider(provider_name)
+    if not current_provider then
+      local next_provider_name = providers_to_try[index + 1]
+      if next_provider_name then
+        vim.notify("Babel: Unknown provider in fallback chain: " .. provider_name, vim.log.levels.WARN)
+        attempt(index + 1)
+      else
+        vim.notify("Babel: Unknown provider in fallback chain: " .. provider_name, vim.log.levels.ERROR)
+      end
+      return
+    end
+
+    current_provider.translate(text, opts.source, opts.target, function(result, err)
+      if err then
+        local next_provider_name = providers_to_try[index + 1]
+        if next_provider_name then
+          if provider_name == "deepl" and next_provider_name == "google" and is_deepl_missing_key(err) then
+            vim.notify("Babel: DeepL API key not found, falling back to Google", vim.log.levels.WARN)
+          else
+            local message = type(err) == "table" and (err.message or err.code or "provider error") or tostring(err)
+            local notify_message = string.format(
+              "Babel: %s failed (%s), falling back to %s",
+              provider_title(provider_name),
+              message,
+              provider_title(next_provider_name)
+            )
+            vim.notify(notify_message, vim.log.levels.WARN)
+          end
+
+          attempt(index + 1)
+          return
+        end
+
+        vim.notify("Babel: " .. normalize_provider_error(provider_name, err), vim.log.levels.ERROR)
+        return
+      end
+
+      handle_success(result, text, provider_name, opts, {
+        cache_key = key,
+      })
+    end)
+  end
+
+  attempt(1)
 end
 
 ---Repeat translation for the last translated input
@@ -159,6 +303,12 @@ end
 ---Clear collected translation history
 function M.clear_history()
   state.history = {}
+end
+
+---Clear translation cache
+function M.clear_cache()
+  state.cache = {}
+  state.cache_keys = {}
 end
 
 return M

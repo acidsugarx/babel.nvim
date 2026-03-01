@@ -4,12 +4,14 @@
 ---@field translate_range fun(line1: number, line2: number) Translate line range
 ---@field translate_word fun() Translate word under cursor
 ---@field repeat_last_translation fun() Repeat last translation
+---@field get_provider_capabilities fun(provider?: string): table|nil Get provider capability table
 
 ---@type BabelConfig
 local config = require("babel.config")
 
 local translate = require("babel.translate")
 local utils = require("babel.utils")
+local provider_capabilities = require("babel.providers.capabilities")
 
 ---@class Babel
 local M = {}
@@ -63,6 +65,13 @@ end
 ---Repeat last translation
 function M.repeat_last_translation()
   translate.repeat_last()
+end
+
+---Get provider capabilities
+---@param provider? string
+---@return table|nil
+function M.get_provider_capabilities(provider)
+  return provider_capabilities.get(provider)
 end
 
 return M

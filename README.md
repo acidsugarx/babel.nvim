@@ -84,9 +84,17 @@ require("babel").setup({
     connect_timeout = 5,   -- curl connect timeout in seconds
     request_timeout = 15,  -- max request time in seconds
   },
+  cache = {
+    enabled = false,       -- enable in-memory translation cache
+    limit = 200,           -- max cache entries
+  },
   history = {
     enabled = false,       -- keep in-memory translation history
     limit = 20,            -- max saved entries
+  },
+  fallback_chain = {
+    deepl = { "google" }, -- if DeepL fails, try Google
+    google = {},
   },
   display = "float",      -- "float" or "picker"
   picker = "auto",        -- "auto", "telescope", "fzf", "snacks", "mini"
@@ -124,8 +132,11 @@ require("babel").setup({
 | `provider` | string | `"google"` | Translation provider: `"google"`, `"deepl"` |
 | `network.connect_timeout` | number | `5` | Network connect timeout (seconds) |
 | `network.request_timeout` | number | `15` | Network request timeout (seconds) |
+| `cache.enabled` | boolean | `false` | Enable in-memory translation cache |
+| `cache.limit` | number | `200` | Maximum cache entries |
 | `history.enabled` | boolean | `false` | Enable in-memory translation history |
 | `history.limit` | number | `20` | Maximum stored history entries |
+| `fallback_chain` | table | `{ deepl = {"google"}, google = {} }` | Per-provider fallback chain |
 | `display` | string | `"float"` | Display mode: `"float"` or `"picker"` |
 | `picker` | string | `"auto"` | Picker: `"auto"`, `"telescope"`, `"fzf"`, `"snacks"`, `"mini"` |
 | `float.mode` | string | `"center"` | Float preset: `"center"` or `"cursor"` |
@@ -173,6 +184,24 @@ require("babel").setup({
   history = {
     enabled = true,
     limit = 50,
+  },
+})
+```
+
+### Fallback chain and cache
+
+You can control provider fallback behavior and enable in-memory caching:
+
+```lua
+require("babel").setup({
+  provider = "deepl",
+  fallback_chain = {
+    deepl = { "google" },
+    google = {},
+  },
+  cache = {
+    enabled = true,
+    limit = 500,
   },
 })
 ```
@@ -260,6 +289,18 @@ require("babel").setup({
 | [LibreTranslate](https://libretranslate.com) | 🔜 | No | Open source, self-hostable |
 | [Yandex](https://translate.yandex.ru) | 🔜 | Yes | Great for Russian |
 | [Lingva](https://lingva.ml) | 🔜 | No | Google proxy, no rate limits |
+
+### Provider capabilities
+
+You can inspect provider capabilities from Lua:
+
+```lua
+local caps = require("babel").get_provider_capabilities()
+-- caps.google.supports_formality == false
+-- caps.deepl.supports_formality == true
+
+local deepl = require("babel").get_provider_capabilities("deepl")
+```
 
 > **🧪 Testing:** DeepL provider is implemented but needs testing. If you have a DeepL API key and want to help test, please [open an issue](https://github.com/acidsugarx/babel.nvim/issues) with your feedback!
 

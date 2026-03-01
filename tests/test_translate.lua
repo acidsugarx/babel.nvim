@@ -108,6 +108,67 @@ T["normalizes google error during deepl fallback"] = function()
   end)
 end
 
+T["respects configurable fallback chain"] = function()
+  local google_calls = 0
+
+  with_translate({
+    google = {
+      translate = function(_, _, _, cb)
+        google_calls = google_calls + 1
+        cb("fallback-ok", nil)
+      end,
+    },
+    deepl = {
+      translate = function(_, _, _, cb)
+        cb(nil, { code = "api_error", message = "API error: temporary issue" })
+      end,
+    },
+  }, {
+    provider = "deepl",
+    fallback_chain = {
+      deepl = { "google" },
+      google = {},
+    },
+  }, function(translate, notifications, shown)
+    translate.translate("hello")
+
+    eq(notifications[1].msg, "Babel: DeepL failed (API error: temporary issue), falling back to Google")
+    eq(notifications[1].level, vim.log.levels.WARN)
+    eq(google_calls, 1)
+    eq(shown[1].result, "fallback-ok")
+  end)
+end
+
+T["can disable fallback chain per provider"] = function()
+  local google_calls = 0
+
+  with_translate({
+    google = {
+      translate = function(_, _, _, cb)
+        google_calls = google_calls + 1
+        cb("fallback-ok", nil)
+      end,
+    },
+    deepl = {
+      translate = function(_, _, _, cb)
+        cb(nil, { code = "api_error", message = "API error: temporary issue" })
+      end,
+    },
+  }, {
+    provider = "deepl",
+    fallback_chain = {
+      deepl = {},
+      google = {},
+    },
+  }, function(translate, notifications)
+    translate.translate("hello")
+
+    eq(google_calls, 0)
+    eq(notifications[1].msg, "Babel: DeepL: API error: temporary issue")
+    eq(notifications[1].level, vim.log.levels.ERROR)
+  end)
+end
+
 T["repeat_last warns when no previous translation"] = function()
   with_translate({
     google = {
@@ -214,6 +275,69 @@ T["history stores entries with limit when enabled"] = function()
     eq(history[1].translated, "two-translated")
     eq(history[2].original, "three")
     eq(history[2].translated, "three-translated")
+  end)
+end
+
+T["cache avoids duplicate provider calls when enabled"] = function()
+  local calls = 0
+
+  with_translate({
+    google = {
+      translate = function(text, _, _, cb)
+        calls = calls + 1
+        cb(text .. "-translated", nil)
+      end,
+    },
+    deepl = {
+      translate = function()
+        error("deepl provider should not be used")
+      end,
+    },
+  }, {
+    provider = "google",
+    cache = {
+      enabled = true,
+      limit = 20,
+    },
+  }, function(translate, _, shown)
+    translate.translate("one")
+    translate.translate("one")
+
+    eq(calls, 1)
+    eq(#shown, 2)
+    eq(shown[1].result, "one-translated")
+    eq(shown[2].result, "one-translated")
+  end)
+end
+
+T["cache can be cleared explicitly"] = function()
+  local calls = 0
+
+  with_translate({
+    google = {
+      translate = function(text, _, _, cb)
+        calls = calls + 1
+        cb(text .. "-translated", nil)
+      end,
+    },
+    deepl = {
+      translate = function()
+        error("deepl provider should not be used")
+      end,
+    },
+  }, {
+    provider = "google",
+    cache = {
+      enabled = true,
+      limit = 20,
+    },
+  }, function(translate)
+    translate.translate("one")
+    translate.translate("one")
+    translate.clear_cache()
+    translate.translate("one")
+
+    eq(calls, 2)
   end)
 end
 

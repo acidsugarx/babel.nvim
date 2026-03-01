@@ -14,7 +14,9 @@
 ---@class BabelOptions Plugin settings
 ---@field deepl? BabelDeeplOptions
 ---@field network? BabelNetworkOptions Network request settings
+---@field cache? BabelCacheOptions Translation cache settings
 ---@field history? BabelHistoryOptions Translation history settings
+---@field fallback_chain? table<string, string[]> Fallback providers by primary provider
 ---@field source string Source language ('auto' = auto-detect)
 ---@field target string Target language ('ru', 'en', etc.)
 ---@field provider string Translation provider ('google', 'deepl')
@@ -26,6 +28,10 @@
 ---@class BabelNetworkOptions Network request settings
 ---@field connect_timeout? number Curl connect timeout in seconds
 ---@field request_timeout? number Curl max request time in seconds
+
+---@class BabelCacheOptions Translation cache settings
+---@field enabled? boolean Enable in-memory translation cache
+---@field limit? number Maximum cache entries to keep
 
 ---@class BabelHistoryOptions Translation history settings
 ---@field enabled? boolean Enable in-memory translation history
@@ -59,9 +65,17 @@ local defaults = {
     connect_timeout = 5,
     request_timeout = 15,
   },
+  cache = {
+    enabled = false,
+    limit = 200,
+  },
   history = {
     enabled = false,
     limit = 20,
+  },
+  fallback_chain = {
+    deepl = { "google" },
+    google = {},
   },
   display = "float", -- "float" or "picker"
   picker = "auto", -- "auto", "telescope", "fzf", "snacks", "mini"

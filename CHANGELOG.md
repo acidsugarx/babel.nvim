@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optional in-memory translation history with configurable entry limit
 - `:BabelRepeat` command to repeat the last translation input
 - Float toggles for auto-close timer, pin/unpin, and original-text copy
+- Configurable per-provider fallback chain (default `deepl -> google`)
+- Optional in-memory translation cache with configurable entry limit
+- Provider capability table API via `require("babel").get_provider_capabilities()`
 
 ### Changed
 - Google/DeepL providers now use shared timeout configuration from `setup()`
@@ -23,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Provider errors are normalized in `translate.lua` for consistent user-facing `vim.notify` messages
 - CI now runs `make test` in GitHub Actions
 - Updated README with history, range command, repeat command, and float toggle examples
+- Updated README with fallback chain, cache, and provider capability usage examples
 
 ### Fixed
 - Transport failures now handle curl exit codes consistently, including friendly timeout errors
