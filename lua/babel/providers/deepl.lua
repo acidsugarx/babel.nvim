@@ -1,6 +1,9 @@
 local M = {}
 
 local config = require("babel.config")
+local curl = require("babel.providers.curl")
+
+local REQUEST_TIMEOUT = 15
 
 --- Gets api key from config/env
 local function get_api_key()
@@ -47,13 +50,17 @@ end
 ---@param text string Text to translate
 ---@param source string Source language code
 ---@param target string Target language code
----@param callback fun(result: string) Callback with translated text
+---@param callback fun(result: string|nil, err: table|string|nil) Callback with translated text
 function M.translate(text, source, target, callback)
   local api_key = get_api_key()
   local endpoint = get_endpoint(api_key)
 
   if not api_key then
-    callback(nil, "DeepL API key not found")
+    callback(nil, {
+      code = "missing_api_key",
+      provider = "deepl",
+      message = "API key not found",
+    })
     return
   end
 
@@ -63,10 +70,14 @@ function M.translate(text, source, target, callback)
     source_lang = map_source_lang(source),
     formality = (config.options.deepl or {}).formality,
   }
+  local timeout_args, timeout = curl.timeout_args(REQUEST_TIMEOUT)
 
   local cmd = {
     "curl",
-    "-s",
+    "-sS",
+  }
+  vim.list_extend(cmd, timeout_args)
+  vim.list_extend(cmd, {
     "-X",
     "POST",
     "-H",
@@ -76,31 +87,63 @@ function M.translate(text, source, target, callback)
     "-d",
     vim.json.encode(body),
     endpoint,
-  }
-
-  vim.fn.jobstart(cmd, {
-    stdout_buffered = true,
-    on_stdout = function(_, data)
-      local response = table.concat(data, "")
-
-      if response == "" then
-        callback(nil, "Empty response")
-        return
-      end
-      local ok, json = pcall(vim.json.decode, response)
-      if not ok then
-        callback(nil, "JSON parse error")
-        return
-      end
-
-      local translated = ""
-
-      if json.translations and json.translations[1] then
-        translated = json.translations[1].text
-      end
-      callback(translated, nil)
-    end,
   })
+
+  curl.run(cmd, { provider = "deepl", timeout = timeout }, function(response, err)
+    if err then
+      callback(nil, err)
+      return
+    end
+
+    if response == "" then
+      callback(nil, {
+        code = "empty_response",
+        provider = "deepl",
+        message = "empty response from API",
+      })
+      return
+    end
+
+    local ok, json = pcall(vim.json.decode, response)
+    if not ok or type(json) ~= "table" then
+      callback(nil, {
+        code = "invalid_json",
+        provider = "deepl",
+        message = "invalid JSON response from API",
+      })
+      return
+    end
+
+    if type(json.message) == "string" and json.message ~= "" then
+      callback(nil, {
+        code = "api_error",
+        provider = "deepl",
+        message = "API error: " .. json.message,
+      })
+      return
+    end
+
+    if type(json.translations) ~= "table" or type(json.translations[1]) ~= "table" then
+      callback(nil, {
+        code = "invalid_response",
+        provider = "deepl",
+        message = "unexpected response shape from API",
+      })
+      return
+    end
+
+    local translated = json.translations[1].text
+    if type(translated) ~= "string" or translated == "" then
+      callback(nil, {
+        code = "invalid_response",
+        provider = "deepl",
+        message = "translation text missing in API response",
+      })
+      return
+    end
+
+    callback(translated, nil)
+  end)
 end
 
 return M
