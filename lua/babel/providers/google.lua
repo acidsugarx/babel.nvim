@@ -1,8 +1,7 @@
 local M = {}
 local NEWLINE_MARKER = " @@000@@ "
+local config = require("babel.config")
 local curl = require("babel.providers.curl")
-
-local REQUEST_TIMEOUT = 15
 
 ---Helper function for handle uri_encode in new versions or custom url_encode on older
 local function url_encode(str)
@@ -23,7 +22,8 @@ end
 function M.translate(text, source, target, callback)
   local clean_text = text:gsub("\n", NEWLINE_MARKER)
   local encoded_text = url_encode(clean_text)
-  local timeout_args, timeout = curl.timeout_args(REQUEST_TIMEOUT)
+  local network_opts = config.options.network or {}
+  local timeout_args, _, request_timeout = curl.timeout_args(network_opts)
 
   -- Use POST request to avoid URL length limits
   local cmd = {
@@ -41,7 +41,7 @@ function M.translate(text, source, target, callback)
     "https://translate.googleapis.com/translate_a/single",
   })
 
-  curl.run(cmd, { provider = "google", timeout = timeout }, function(response, err)
+  curl.run(cmd, { provider = "google", request_timeout = request_timeout }, function(response, err)
     if err then
       callback(nil, err)
       return

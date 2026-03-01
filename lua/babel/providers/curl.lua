@@ -23,17 +23,30 @@ local function join_chunks(data)
 end
 
 ---Build curl timeout arguments
----@param timeout? number
+---@param opts? { connect_timeout?: number, request_timeout?: number }
 ---@return string[]
 ---@return number
-function M.timeout_args(timeout)
-  local request_timeout = tonumber(timeout) or DEFAULT_REQUEST_TIMEOUT
+---@return number
+function M.timeout_args(opts)
+  opts = opts or {}
+
+  local connect_timeout = tonumber(opts.connect_timeout) or DEFAULT_CONNECT_TIMEOUT
+  local request_timeout = tonumber(opts.request_timeout) or DEFAULT_REQUEST_TIMEOUT
+
+  if connect_timeout <= 0 then
+    connect_timeout = DEFAULT_CONNECT_TIMEOUT
+  end
+  if request_timeout <= 0 then
+    request_timeout = DEFAULT_REQUEST_TIMEOUT
+  end
+
   return {
     "--connect-timeout",
-    tostring(DEFAULT_CONNECT_TIMEOUT),
+    tostring(connect_timeout),
     "--max-time",
     tostring(request_timeout),
   },
+    connect_timeout,
     request_timeout
 end
 
@@ -44,7 +57,7 @@ end
 function M.run(cmd, opts, callback)
   opts = opts or {}
   local provider = opts.provider or "provider"
-  local timeout = tonumber(opts.timeout) or DEFAULT_REQUEST_TIMEOUT
+  local timeout = tonumber(opts.request_timeout or opts.timeout) or DEFAULT_REQUEST_TIMEOUT
 
   local stdout_data = {}
   local stderr_data = {}

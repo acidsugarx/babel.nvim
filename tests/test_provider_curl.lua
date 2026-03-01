@@ -14,6 +14,50 @@ local function with_jobstart(stub, fn)
   assert(ok, err)
 end
 
+T["builds timeout args from defaults"] = function()
+  package.loaded["babel.providers.curl"] = nil
+  local curl = require("babel.providers.curl")
+
+  local args, connect_timeout, request_timeout = curl.timeout_args()
+
+  eq(connect_timeout, 5)
+  eq(request_timeout, 15)
+  eq(args[1], "--connect-timeout")
+  eq(args[2], "5")
+  eq(args[3], "--max-time")
+  eq(args[4], "15")
+end
+
+T["builds timeout args from config"] = function()
+  package.loaded["babel.providers.curl"] = nil
+  local curl = require("babel.providers.curl")
+
+  local args, connect_timeout, request_timeout = curl.timeout_args({
+    connect_timeout = 7,
+    request_timeout = 21,
+  })
+
+  eq(connect_timeout, 7)
+  eq(request_timeout, 21)
+  eq(args[2], "7")
+  eq(args[4], "21")
+end
+
+T["falls back to defaults for invalid timeout values"] = function()
+  package.loaded["babel.providers.curl"] = nil
+  local curl = require("babel.providers.curl")
+
+  local args, connect_timeout, request_timeout = curl.timeout_args({
+    connect_timeout = 0,
+    request_timeout = -1,
+  })
+
+  eq(connect_timeout, 5)
+  eq(request_timeout, 15)
+  eq(args[2], "5")
+  eq(args[4], "15")
+end
+
 T["returns timeout error for curl exit 28"] = function()
   with_jobstart(function(_, opts)
     opts.on_stdout(nil, { "" })

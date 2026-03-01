@@ -80,6 +80,10 @@ require("babel").setup({
   source = "auto",        -- source language (auto-detect)
   target = "ru",          -- target language
   provider = "google",    -- translation provider: "google", "deepl"
+  network = {
+    connect_timeout = 5,   -- curl connect timeout in seconds
+    request_timeout = 15,  -- max request time in seconds
+  },
   display = "float",      -- "float" or "picker"
   picker = "auto",        -- "auto", "telescope", "fzf", "snacks", "mini"
   float = {
@@ -111,6 +115,8 @@ require("babel").setup({
 | `source` | string | `"auto"` | Source language (auto-detect) |
 | `target` | string | `"ru"` | Target language code |
 | `provider` | string | `"google"` | Translation provider: `"google"`, `"deepl"` |
+| `network.connect_timeout` | number | `5` | Network connect timeout (seconds) |
+| `network.request_timeout` | number | `15` | Network request timeout (seconds) |
 | `display` | string | `"float"` | Display mode: `"float"` or `"picker"` |
 | `picker` | string | `"auto"` | Picker: `"auto"`, `"telescope"`, `"fzf"`, `"snacks"`, `"mini"` |
 | `float.mode` | string | `"center"` | Float preset: `"center"` or `"cursor"` |
@@ -129,6 +135,19 @@ require("babel").setup({
     mode = "cursor",
     max_width = 60,
     max_height = 10,
+  },
+})
+```
+
+### Network timeout customization
+
+You can tune provider request timeouts for slow/unstable networks:
+
+```lua
+require("babel").setup({
+  network = {
+    connect_timeout = 3,
+    request_timeout = 25,
   },
 })
 ```

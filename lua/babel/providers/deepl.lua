@@ -3,8 +3,6 @@ local M = {}
 local config = require("babel.config")
 local curl = require("babel.providers.curl")
 
-local REQUEST_TIMEOUT = 15
-
 --- Gets api key from config/env
 local function get_api_key()
   local key = config.options.deepl and config.options.deepl.api_key
@@ -70,7 +68,8 @@ function M.translate(text, source, target, callback)
     source_lang = map_source_lang(source),
     formality = (config.options.deepl or {}).formality,
   }
-  local timeout_args, timeout = curl.timeout_args(REQUEST_TIMEOUT)
+  local network_opts = config.options.network or {}
+  local timeout_args, _, request_timeout = curl.timeout_args(network_opts)
 
   local cmd = {
     "curl",
@@ -89,7 +88,7 @@ function M.translate(text, source, target, callback)
     endpoint,
   })
 
-  curl.run(cmd, { provider = "deepl", timeout = timeout }, function(response, err)
+  curl.run(cmd, { provider = "deepl", request_timeout = request_timeout }, function(response, err)
     if err then
       callback(nil, err)
       return

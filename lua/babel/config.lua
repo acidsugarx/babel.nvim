@@ -13,6 +13,7 @@
 
 ---@class BabelOptions Plugin settings
 ---@field deepl? BabelDeeplOptions
+---@field network? BabelNetworkOptions Network request settings
 ---@field source string Source language ('auto' = auto-detect)
 ---@field target string Target language ('ru', 'en', etc.)
 ---@field provider string Translation provider ('google', 'deepl')
@@ -20,6 +21,10 @@
 ---@field picker "auto"|"telescope"|"fzf"|"snacks"|"mini" Picker to use (when display = "picker")
 ---@field float BabelFloatOptions Floating window options
 ---@field keymaps BabelKeymaps Keybindings
+
+---@class BabelNetworkOptions Network request settings
+---@field connect_timeout? number Curl connect timeout in seconds
+---@field request_timeout? number Curl max request time in seconds
 
 ---@class BabelFloatOptions Floating window settings
 ---@field border string Border style ('rounded', 'single', 'double', 'none')
@@ -42,6 +47,10 @@ local defaults = {
   source = "auto",
   target = "ru",
   provider = "google",
+  network = {
+    connect_timeout = 5,
+    request_timeout = 15,
+  },
   display = "float", -- "float" or "picker"
   picker = "auto", -- "auto", "telescope", "fzf", "snacks", "mini"
   float = {

@@ -8,8 +8,8 @@ local function with_deepl(stub_curl, setup_opts, fn)
   local config = require("babel.config")
 
   package.loaded["babel.providers.curl"] = {
-    timeout_args = function()
-      return {}, 15
+    timeout_args = function(opts)
+      return {}, opts and opts.connect_timeout or 5, opts and opts.request_timeout or 15
     end,
     run = stub_curl,
   }
@@ -103,6 +103,30 @@ T["returns translated text on valid response"] = function()
 
     eq(err, nil)
     eq(result, "privet")
+  end)
+end
+
+T["uses configured request timeout"] = function()
+  local seen_timeout
+
+  with_deepl(function(_, opts, cb)
+    seen_timeout = opts.request_timeout
+    cb('{"translations":[{"text":"privet"}]}', nil)
+  end, {
+    deepl = { api_key = "test-key" },
+    network = {
+      connect_timeout = 4,
+      request_timeout = 23,
+    },
+  }, function(deepl)
+    local result, err
+    deepl.translate("hello", "auto", "ru", function(r, e)
+      result, err = r, e
+    end)
+
+    eq(err, nil)
+    eq(result, "privet")
+    eq(seen_timeout, 23)
   end)
 end
 
