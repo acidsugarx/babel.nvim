@@ -251,6 +251,8 @@ Contributions are welcome! Feel free to:
 - 💡 Suggest features
 - 🔧 Submit pull requests
 
+If you use AI coding assistants, check `AGENTS.md` for project architecture, quality gates, and safe-change checklist.
+
 ## 🙏 Acknowledgments
 
 Thanks to the amazing Neovim plugin ecosystem:

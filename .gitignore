@@ -20,3 +20,4 @@ deps/
 # Local development
 .local/
 .cache/
+TASKS_IDEAL.md
