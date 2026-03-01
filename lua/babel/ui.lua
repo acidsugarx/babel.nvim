@@ -50,12 +50,15 @@ end
 
 ---Show translation in focusable floating window
 ---@param text string Translated text
----@param _original string Original text (reserved for future use)
+---@param original string Original text
 ---@param opts? BabelFloatOptions
-function M.show_float(text, _original, opts)
+function M.show_float(text, original, opts)
   opts = opts or config.options.float
   local user_win_opts = opts.nvim_open_win or {}
   local mode = opts.mode or "center"
+  local auto_close_ms = tonumber(opts.auto_close_ms) or 0
+  local allow_pin = opts.pin ~= false
+  local allow_copy_original = opts.copy_original == true
 
   if type(user_win_opts) ~= "table" then
     vim.notify("Babel: float.nvim_open_win must be a table", vim.log.levels.WARN)
@@ -65,6 +68,11 @@ function M.show_float(text, _original, opts)
   if mode ~= "center" and mode ~= "cursor" then
     vim.notify("Babel: float.mode must be 'center' or 'cursor'", vim.log.levels.WARN)
     mode = "center"
+  end
+
+  if auto_close_ms < 0 then
+    vim.notify("Babel: float.auto_close_ms must be >= 0", vim.log.levels.WARN)
+    auto_close_ms = 0
   end
 
   local lines = vim.split(text, "\n")
@@ -117,6 +125,31 @@ function M.show_float(text, _original, opts)
   -- Create window
   local win = vim.api.nvim_open_win(buf, true, win_opts)
 
+  local is_pinned = false
+  local timer_generation = 0
+
+  local function close_float()
+    if vim.api.nvim_win_is_valid(win) then
+      vim.api.nvim_win_close(win, true)
+    end
+  end
+
+  local function schedule_auto_close()
+    if auto_close_ms <= 0 or is_pinned then
+      return
+    end
+
+    timer_generation = timer_generation + 1
+    local generation = timer_generation
+
+    vim.defer_fn(function()
+      if generation ~= timer_generation or is_pinned then
+        return
+      end
+      close_float()
+    end, auto_close_ms)
+  end
+
   -- Window options
   vim.wo[win].wrap = true
   vim.wo[win].cursorline = false
@@ -125,9 +158,7 @@ function M.show_float(text, _original, opts)
   local close_keys = { "q", "<Esc>", "<CR>" }
   for _, key in ipairs(close_keys) do
     vim.keymap.set("n", key, function()
-      if vim.api.nvim_win_is_valid(win) then
-        vim.api.nvim_win_close(win, true)
-      end
+      close_float()
     end, { buffer = buf, nowait = true })
   end
 
@@ -136,6 +167,29 @@ function M.show_float(text, _original, opts)
     vim.fn.setreg("+", text)
     vim.notify("Translation copied to clipboard", vim.log.levels.INFO)
   end, { buffer = buf, nowait = true })
+
+  if allow_copy_original and type(original) == "string" and original ~= "" then
+    vim.keymap.set("n", "Y", function()
+      vim.fn.setreg("+", original)
+      vim.notify("Original copied to clipboard", vim.log.levels.INFO)
+    end, { buffer = buf, nowait = true })
+  end
+
+  if auto_close_ms > 0 and allow_pin then
+    vim.keymap.set("n", "p", function()
+      is_pinned = not is_pinned
+      timer_generation = timer_generation + 1
+
+      if is_pinned then
+        vim.notify("Babel: float pinned", vim.log.levels.INFO)
+      else
+        vim.notify("Babel: float unpinned", vim.log.levels.INFO)
+        schedule_auto_close()
+      end
+    end, { buffer = buf, nowait = true })
+  end
+
+  schedule_auto_close()
 end
 
 ---Show translation using Telescope

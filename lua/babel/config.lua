@@ -14,6 +14,7 @@
 ---@class BabelOptions Plugin settings
 ---@field deepl? BabelDeeplOptions
 ---@field network? BabelNetworkOptions Network request settings
+---@field history? BabelHistoryOptions Translation history settings
 ---@field source string Source language ('auto' = auto-detect)
 ---@field target string Target language ('ru', 'en', etc.)
 ---@field provider string Translation provider ('google', 'deepl')
@@ -26,11 +27,18 @@
 ---@field connect_timeout? number Curl connect timeout in seconds
 ---@field request_timeout? number Curl max request time in seconds
 
+---@class BabelHistoryOptions Translation history settings
+---@field enabled? boolean Enable in-memory translation history
+---@field limit? number Maximum history entries to keep
+
 ---@class BabelFloatOptions Floating window settings
 ---@field border string Border style ('rounded', 'single', 'double', 'none')
 ---@field mode? "center"|"cursor" Float positioning preset ('center' = screen center, 'cursor' = follow cursor)
 ---@field max_width number Maximum window width
 ---@field max_height number Maximum window height
+---@field auto_close_ms? number Auto-close timeout in milliseconds (0 disables)
+---@field pin? boolean Allow pin toggle with 'p' when auto-close is enabled
+---@field copy_original? boolean Enable copying original text with 'Y'
 ---@field nvim_open_win? table<string, any> Extra nvim_open_win() options (overrides defaults)
 
 ---@class BabelKeymaps Keybindings
@@ -51,6 +59,10 @@ local defaults = {
     connect_timeout = 5,
     request_timeout = 15,
   },
+  history = {
+    enabled = false,
+    limit = 20,
+  },
   display = "float", -- "float" or "picker"
   picker = "auto", -- "auto", "telescope", "fzf", "snacks", "mini"
   float = {
@@ -58,6 +70,9 @@ local defaults = {
     mode = "center",
     max_width = 80,
     max_height = 20,
+    auto_close_ms = 0,
+    pin = true,
+    copy_original = false,
     nvim_open_win = {},
   },
   keymaps = {

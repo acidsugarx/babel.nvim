@@ -84,6 +84,10 @@ require("babel").setup({
     connect_timeout = 5,   -- curl connect timeout in seconds
     request_timeout = 15,  -- max request time in seconds
   },
+  history = {
+    enabled = false,       -- keep in-memory translation history
+    limit = 20,            -- max saved entries
+  },
   display = "float",      -- "float" or "picker"
   picker = "auto",        -- "auto", "telescope", "fzf", "snacks", "mini"
   float = {
@@ -91,6 +95,9 @@ require("babel").setup({
     mode = "center", -- "center" or "cursor"
     max_width = 80,
     max_height = 20,
+    auto_close_ms = 0, -- auto-close delay, 0 = disabled
+    pin = true, -- allow pin toggle with `p` when auto-close is enabled
+    copy_original = false, -- allow copying original text with `Y`
     nvim_open_win = {}, -- extra nvim_open_win() options (overrides defaults)
   },
   keymaps = {
@@ -117,9 +124,14 @@ require("babel").setup({
 | `provider` | string | `"google"` | Translation provider: `"google"`, `"deepl"` |
 | `network.connect_timeout` | number | `5` | Network connect timeout (seconds) |
 | `network.request_timeout` | number | `15` | Network request timeout (seconds) |
+| `history.enabled` | boolean | `false` | Enable in-memory translation history |
+| `history.limit` | number | `20` | Maximum stored history entries |
 | `display` | string | `"float"` | Display mode: `"float"` or `"picker"` |
 | `picker` | string | `"auto"` | Picker: `"auto"`, `"telescope"`, `"fzf"`, `"snacks"`, `"mini"` |
 | `float.mode` | string | `"center"` | Float preset: `"center"` or `"cursor"` |
+| `float.auto_close_ms` | number | `0` | Auto-close timeout in milliseconds (`0` disables) |
+| `float.pin` | boolean | `true` | Enable pin toggle key (`p`) when auto-close is enabled |
+| `float.copy_original` | boolean | `false` | Enable copying original text with `Y` |
 | `float.nvim_open_win` | table | `{}` | Extra `nvim_open_win()` options for float window |
 | `deepl.api_key` | string | `nil` | DeepL API key (or use `DEEPL_API_KEY` env) |
 | `deepl.pro` | boolean | `nil` | Force Pro/Free endpoint (`nil` = auto-detect by key) |
@@ -148,6 +160,19 @@ require("babel").setup({
   network = {
     connect_timeout = 3,
     request_timeout = 25,
+  },
+})
+```
+
+### Translation history
+
+You can keep the latest successful translations in memory:
+
+```lua
+require("babel").setup({
+  history = {
+    enabled = true,
+    limit = 50,
   },
 })
 ```
@@ -212,7 +237,9 @@ require("babel").setup({
 | Command | Description |
 |---------|-------------|
 | `:Babel [text]` | Translate provided text |
+| `:[range]Babel` | Translate selected line range (e.g. `:10,20Babel`) |
 | `:BabelWord` | Translate word under cursor |
+| `:BabelRepeat` | Repeat last translation input |
 
 ### In Translation Window
 
@@ -220,6 +247,8 @@ require("babel").setup({
 |-----|--------|
 | `q` / `<Esc>` / `<CR>` | Close window |
 | `y` | Copy translation to clipboard |
+| `Y` | Copy original text (if `float.copy_original = true`) |
+| `p` | Pin/unpin auto-close timer (if enabled) |
 | `j` / `k` | Scroll |
 
 ## 🌐 Providers

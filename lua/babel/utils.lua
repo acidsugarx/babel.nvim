@@ -25,4 +25,16 @@ function M.get_word_under_cursor()
   return vim.fn.expand("<cword>")
 end
 
+---Get text from line range
+---@param line1 number Start line (1-based)
+---@param line2 number End line (1-based)
+---@return string
+function M.get_line_range(line1, line2)
+  local start_line = math.max(line1 - 1, 0)
+  local end_line = math.max(line2, start_line)
+  local lines = vim.api.nvim_buf_get_lines(0, start_line, end_line, false)
+
+  return table.concat(lines, "\n")
+end
+
 return M

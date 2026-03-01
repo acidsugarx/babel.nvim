@@ -12,12 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shared curl transport layer for providers with unified `stdout/stderr/on_exit` handling
 - Provider/translate reliability tests (curl transport, Google, DeepL, and error normalization paths)
 - Command tests for `:Babel` and `:BabelWord`
+- `:[range]Babel` support for translating explicit line ranges
+- Optional in-memory translation history with configurable entry limit
+- `:BabelRepeat` command to repeat the last translation input
+- Float toggles for auto-close timer, pin/unpin, and original-text copy
 
 ### Changed
 - Google/DeepL providers now use shared timeout configuration from `setup()`
 - Added timeout-focused provider tests for configurable request deadlines
 - Provider errors are normalized in `translate.lua` for consistent user-facing `vim.notify` messages
 - CI now runs `make test` in GitHub Actions
+- Updated README with history, range command, repeat command, and float toggle examples
 
 ### Fixed
 - Transport failures now handle curl exit codes consistently, including friendly timeout errors

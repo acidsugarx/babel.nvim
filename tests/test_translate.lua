@@ -108,4 +108,113 @@ T["normalizes google error during deepl fallback"] = function()
   end)
 end
 
+T["repeat_last warns when no previous translation"] = function()
+  with_translate({
+    google = {
+      translate = function()
+        error("google provider should not be used")
+      end,
+    },
+    deepl = {
+      translate = function()
+        error("deepl provider should not be used")
+      end,
+    },
+  }, {
+    provider = "google",
+  }, function(translate, notifications)
+    translate.repeat_last()
+
+    eq(notifications[1].msg, "Babel: No previous translation to repeat")
+    eq(notifications[1].level, vim.log.levels.WARN)
+  end)
+end
+
+T["repeat_last reuses last input text"] = function()
+  local calls = {}
+
+  with_translate({
+    google = {
+      translate = function(text, _, _, cb)
+        table.insert(calls, text)
+        cb("ok", nil)
+      end,
+    },
+    deepl = {
+      translate = function()
+        error("deepl provider should not be used")
+      end,
+    },
+  }, {
+    provider = "google",
+  }, function(translate)
+    translate.translate("hello")
+    translate.repeat_last()
+
+    eq(#calls, 2)
+    eq(calls[1], "hello")
+    eq(calls[2], "hello")
+  end)
+end
+
+T["history is empty when disabled"] = function()
+  with_translate({
+    google = {
+      translate = function(_, _, _, cb)
+        cb("privet", nil)
+      end,
+    },
+    deepl = {
+      translate = function()
+        error("deepl provider should not be used")
+      end,
+    },
+  }, {
+    provider = "google",
+    history = {
+      enabled = false,
+      limit = 10,
+    },
+  }, function(translate)
+    translate.translate("hello")
+
+    local history = translate.get_history()
+    eq(#history, 0)
+  end)
+end
+
+T["history stores entries with limit when enabled"] = function()
+  with_translate({
+    google = {
+      translate = function(text, _, _, cb)
+        cb(text .. "-translated", nil)
+      end,
+    },
+    deepl = {
+      translate = function()
+        error("deepl provider should not be used")
+      end,
+    },
+  }, {
+    provider = "google",
+    source = "auto",
+    target = "ru",
+    history = {
+      enabled = true,
+      limit = 2,
+    },
+  }, function(translate)
+    translate.translate("one")
+    translate.translate("two")
+    translate.translate("three")
+
+    local history = translate.get_history()
+    eq(#history, 2)
+    eq(history[1].original, "two")
+    eq(history[1].translated, "two-translated")
+    eq(history[2].original, "three")
+    eq(history[2].translated, "three-translated")
+  end)
+end
+
 return T

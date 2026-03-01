@@ -4,6 +4,16 @@ local function eq(actual, expected)
   assert(actual == expected, string.format("Expected %s, got %s", vim.inspect(expected), vim.inspect(actual)))
 end
 
+local function has_keymap(buf, lhs)
+  for _, map in ipairs(vim.api.nvim_buf_get_keymap(buf, "n")) do
+    if map.lhs == lhs then
+      return true
+    end
+  end
+
+  return false
+end
+
 local function capture_open_win(float_opts)
   local ui = require("babel.ui")
   local config = require("babel.config")
@@ -11,6 +21,7 @@ local function capture_open_win(float_opts)
   config.setup({ float = float_opts })
 
   local captured_opts
+  local captured_buf
   local notifications = {}
 
   local api = vim.api
@@ -22,7 +33,8 @@ local function capture_open_win(float_opts)
     return { { width = 120, height = 40 } }
   end
 
-  api.nvim_open_win = function(_, _, opts)
+  api.nvim_open_win = function(buf, _, opts)
+    captured_buf = buf
     captured_opts = vim.deepcopy(opts)
     return vim.api.nvim_get_current_win()
   end
@@ -39,7 +51,7 @@ local function capture_open_win(float_opts)
 
   assert(ok, err)
 
-  return captured_opts, notifications
+  return captured_opts, notifications, captured_buf
 end
 
 T["float mode defaults to center preset"] = function()
@@ -84,6 +96,28 @@ T["invalid mode warns and falls back to center"] = function()
   eq(win_opts.relative, "editor")
   eq(notifications[1].msg, "Babel: float.mode must be 'center' or 'cursor'")
   eq(notifications[1].level, vim.log.levels.WARN)
+end
+
+T["invalid auto_close_ms warns and is ignored"] = function()
+  local _, notifications = capture_open_win({ auto_close_ms = -10 })
+
+  eq(notifications[1].msg, "Babel: float.auto_close_ms must be >= 0")
+  eq(notifications[1].level, vim.log.levels.WARN)
+end
+
+T["copy_original enables Y mapping"] = function()
+  local _, _, buf = capture_open_win({ copy_original = true })
+  eq(has_keymap(buf, "Y"), true)
+end
+
+T["pin mapping enabled when auto-close is active"] = function()
+  local _, _, buf = capture_open_win({ auto_close_ms = 60000, pin = true })
+  eq(has_keymap(buf, "p"), true)
+end
+
+T["pin mapping disabled when pin toggle is off"] = function()
+  local _, _, buf = capture_open_win({ auto_close_ms = 60000, pin = false })
+  eq(has_keymap(buf, "p"), false)
 end
 
 return T
