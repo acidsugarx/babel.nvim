@@ -66,7 +66,14 @@ jobs:
       - name: Install Neovim
         run: |
           mkdir -p _neovim
-          curl -sL https://github.com/neovim/neovim/releases/download/stable/nvim-linux64.tar.gz | tar xzf - --strip-components=1 -C _neovim
+          if curl -fsSL -o nvim.tar.gz https://github.com/neovim/neovim/releases/download/stable/nvim-linux-x86_64.tar.gz; then
+            echo "Downloaded nvim-linux-x86_64.tar.gz"
+          else
+            curl -fsSL -o nvim.tar.gz https://github.com/neovim/neovim/releases/download/stable/nvim-linux64.tar.gz
+            echo "Downloaded fallback nvim-linux64.tar.gz"
+          fi
+          tar xzf nvim.tar.gz --strip-components=1 -C _neovim
+          rm -f nvim.tar.gz
 
       - name: Run tests
         run: |
