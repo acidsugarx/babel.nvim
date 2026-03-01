@@ -54,6 +54,19 @@ end
 ---@param opts? BabelFloatOptions
 function M.show_float(text, _original, opts)
   opts = opts or config.options.float
+  local user_win_opts = opts.nvim_open_win or {}
+  local mode = opts.mode or "center"
+
+  if type(user_win_opts) ~= "table" then
+    vim.notify("Babel: float.nvim_open_win must be a table", vim.log.levels.WARN)
+    user_win_opts = {}
+  end
+
+  if mode ~= "center" and mode ~= "cursor" then
+    vim.notify("Babel: float.mode must be 'center' or 'cursor'", vim.log.levels.WARN)
+    mode = "center"
+  end
+
   local lines = vim.split(text, "\n")
 
   -- Calculate dimensions
@@ -75,9 +88,21 @@ function M.show_float(text, _original, opts)
   local ui_info = vim.api.nvim_list_uis()[1]
   local row = math.floor((ui_info.height - height) / 2)
   local col = math.floor((ui_info.width - width) / 2)
+  local mode_opts = {
+    center = {
+      relative = "editor",
+      row = row,
+      col = col,
+    },
+    cursor = {
+      relative = "cursor",
+      row = 1,
+      col = 0,
+      anchor = "NW",
+    },
+  }
 
-  -- Create window
-  local win = vim.api.nvim_open_win(buf, true, {
+  local win_opts = vim.tbl_deep_extend("force", {
     relative = "editor",
     width = math.max(width, 20),
     height = math.max(height, 3),
@@ -87,7 +112,10 @@ function M.show_float(text, _original, opts)
     border = opts.border or "rounded",
     title = " Translation ",
     title_pos = "center",
-  })
+  }, mode_opts[mode], user_win_opts)
+
+  -- Create window
+  local win = vim.api.nvim_open_win(buf, true, win_opts)
 
   -- Window options
   vim.wo[win].wrap = true

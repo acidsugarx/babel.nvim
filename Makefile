@@ -21,7 +21,8 @@ lint:  ## Lint code with selene and typos
 
 test: $(MINITEST)  ## Run tests with mini.test
 	nvim --headless --noplugin -u ./scripts/minimal_init.lua \
-		-c "lua MiniTest.run()"
+		-c "lua MiniTest.run()" \
+		-c "qa"
 
 $(MINITEST):
 	mkdir -p deps

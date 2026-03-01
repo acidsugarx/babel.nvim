@@ -84,8 +84,10 @@ require("babel").setup({
   picker = "auto",        -- "auto", "telescope", "fzf", "snacks", "mini"
   float = {
     border = "rounded",
+    mode = "center", -- "center" or "cursor"
     max_width = 80,
     max_height = 20,
+    nvim_open_win = {}, -- extra nvim_open_win() options (overrides defaults)
   },
   keymaps = {
     translate = "<leader>tr",
@@ -111,9 +113,46 @@ require("babel").setup({
 | `provider` | string | `"google"` | Translation provider: `"google"`, `"deepl"` |
 | `display` | string | `"float"` | Display mode: `"float"` or `"picker"` |
 | `picker` | string | `"auto"` | Picker: `"auto"`, `"telescope"`, `"fzf"`, `"snacks"`, `"mini"` |
+| `float.mode` | string | `"center"` | Float preset: `"center"` or `"cursor"` |
+| `float.nvim_open_win` | table | `{}` | Extra `nvim_open_win()` options for float window |
 | `deepl.api_key` | string | `nil` | DeepL API key (or use `DEEPL_API_KEY` env) |
 | `deepl.pro` | boolean | `nil` | Force Pro/Free endpoint (`nil` = auto-detect by key) |
 | `deepl.formality` | string | `"default"` | Formality: `"default"`, `"more"`, `"less"`, `"prefer_more"`, `"prefer_less"` |
+
+### Cursor-follow float preset
+
+For a smaller popup that follows your cursor, use:
+
+```lua
+require("babel").setup({
+  float = {
+    mode = "cursor",
+    max_width = 60,
+    max_height = 10,
+  },
+})
+```
+
+### Float window customization
+
+You can override Babel's default float settings by passing options directly to `nvim_open_win()`:
+
+```lua
+require("babel").setup({
+  float = {
+    max_width = 60,
+    max_height = 10,
+    nvim_open_win = {
+      relative = "cursor",
+      row = 1,
+      col = 0,
+      anchor = "NW",
+      border = "single",
+      title = " Babel ",
+    },
+  },
+})
+```
 
 ### Language Codes
 

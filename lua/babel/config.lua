@@ -23,8 +23,10 @@
 
 ---@class BabelFloatOptions Floating window settings
 ---@field border string Border style ('rounded', 'single', 'double', 'none')
+---@field mode? "center"|"cursor" Float positioning preset ('center' = screen center, 'cursor' = follow cursor)
 ---@field max_width number Maximum window width
 ---@field max_height number Maximum window height
+---@field nvim_open_win? table<string, any> Extra nvim_open_win() options (overrides defaults)
 
 ---@class BabelKeymaps Keybindings
 ---@field translate string Translate selection (visual mode)
@@ -44,8 +46,10 @@ local defaults = {
   picker = "auto", -- "auto", "telescope", "fzf", "snacks", "mini"
   float = {
     border = "rounded",
+    mode = "center",
     max_width = 80,
     max_height = 20,
+    nvim_open_win = {},
   },
   keymaps = {
     translate = "<leader>tr",
