@@ -277,21 +277,30 @@ function M.show_lang_picker(callback)
     return entry.label .. " (" .. entry.code .. ")" .. marker
   end
 
-  local items = {}
+  local source_items = {}
+  local target_items = {}
   for _, entry in ipairs(lang_list) do
-    table.insert(items, format_entry(entry))
+    table.insert(source_items, format_entry(entry))
+    -- Exclude "auto" from target selection — target must be explicit
+    if entry.code ~= "auto" then
+      table.insert(target_items, format_entry(entry))
+    end
   end
 
   -- Step 1: pick source
-  vim.ui.select(items, { prompt = "Source language" }, function(_, idx)
+  vim.ui.select(source_items, { prompt = "Source language" }, function(_, idx)
     if not idx then return end
     local picked_source = lang_list[idx].code
     config.options.source = picked_source
 
-    -- Step 2: pick target
-    vim.ui.select(items, { prompt = "Target language" }, function(_, tidx)
+    -- Step 2: pick target (no "auto" option)
+    local target_list = vim.tbl_filter(function(e)
+      return e.code ~= "auto"
+    end, lang_list)
+
+    vim.ui.select(target_items, { prompt = "Target language" }, function(_, tidx)
       if not tidx then return end
-      local picked_target = lang_list[tidx].code
+      local picked_target = target_list[tidx].code
       config.options.target = picked_target
 
       if callback then
