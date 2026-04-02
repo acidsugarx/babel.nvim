@@ -315,6 +315,8 @@ require("babel").setup({
 | `<leader>tw` | Normal | Translate word under cursor |
 | `<leader>tl` | Normal | Open language picker |
 | `<leader>ts` | Normal | Swap source ↔ target |
+| `<leader>th` | Normal | Translation history |
+| `<leader>th` | Normal | Translation history |
 
 ### Commands
 
@@ -326,6 +328,10 @@ require("babel").setup({
 | `:BabelRepeat` | Repeat last translation input |
 | `:BabelLang` | Open language picker (source → target) |
 | `:BabelSwap` | Swap source and target languages |
+| `:BabelHistory` | Browse translation history |
+| `:BabelHistoryClear` | Clear translation history |
+| `:BabelHistory` | Browse translation history |
+| `:BabelHistoryClear` | Clear translation history |
 
 ### In Translation Window
 
@@ -336,6 +342,7 @@ require("babel").setup({
 | `Y` | Copy original text (if `float.copy_original = true`) |
 | `p` | Pin/unpin auto-close timer (if enabled) |
 | `L` | Open language picker |
+| `H` | Open translation history |
 | `j` / `k` | Scroll |
 
 ## 🌐 Providers
