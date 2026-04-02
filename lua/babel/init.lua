@@ -7,7 +7,8 @@
 ---@field get_provider_capabilities fun(provider?: string): table|nil Get provider capability table
 ---@field select_languages fun() Open language picker
 ---@field swap_languages fun() Swap source and target languages
-
+---@field show_history fun() Show translation history picker
+---@field clear_history fun() Clear translation history
 ---@type BabelConfig
 local config = require("babel.config")
 
@@ -49,6 +50,13 @@ function M.setup(opts)
     vim.keymap.set("n", keymaps.swap, function()
       M.swap_languages()
     end, { desc = "Babel: Swap languages" })
+  end
+
+  -- History
+  if keymaps.history then
+    vim.keymap.set("n", keymaps.history, function()
+      M.show_history()
+    end, { desc = "Babel: Translation history" })
   end
 end
 
@@ -101,6 +109,18 @@ function M.swap_languages()
   local opts = config.options
   opts.source, opts.target = opts.target, opts.source
   vim.notify("Babel: " .. opts.source .. " -> " .. opts.target, vim.log.levels.INFO)
+end
+
+---Show translation history
+function M.show_history()
+  local ui = require("babel.ui")
+  ui.show_history()
+end
+
+---Clear translation history
+function M.clear_history()
+  translate.clear_history()
+  vim.notify("Babel: history cleared", vim.log.levels.INFO)
 end
 
 return M

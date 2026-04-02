@@ -317,6 +317,42 @@ function M.show_lang_picker(callback)
   end)
 end
 
+---Show translation history picker
+function M.show_history()
+  local translate = require("babel.translate")
+  local history = translate.get_history()
+
+  if #history == 0 then
+    vim.notify("Babel: no translation history", vim.log.levels.INFO)
+    return
+  end
+
+  local items = {}
+  for _, entry in ipairs(history) do
+    local display = entry.original
+    local translation = entry.translated
+    -- Truncate long texts for the list view
+    if #display > 50 then
+      display = display:sub(1, 47) .. "…"
+    end
+    if #translation > 50 then
+      translation = translation:sub(1, 47) .. "…"
+    end
+    local label = display .. " → " .. translation .. " (" .. entry.source .. "→" .. entry.target .. ")"
+    table.insert(items, label)
+  end
+
+  vim.ui.select(items, { prompt = "Translation History" }, function(_, idx)
+    if not idx then
+      return
+    end
+    local entry = history[idx]
+    if entry then
+      M.show_float(entry.translated, entry.original)
+    end
+  end)
+end
+
 ---Show translation using Telescope
 ---@param text string Translated text
 ---@param _original string Original text (reserved for future use)

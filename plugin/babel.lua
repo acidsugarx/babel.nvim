@@ -25,3 +25,11 @@ end, { desc = "Select translation languages" })
 vim.api.nvim_create_user_command("BabelSwap", function()
   require("babel").swap_languages()
 end, { desc = "Swap source and target languages" })
+
+vim.api.nvim_create_user_command("BabelHistory", function()
+  require("babel").show_history()
+end, { desc = "Translation history" })
+
+vim.api.nvim_create_user_command("BabelHistoryClear", function()
+  require("babel").clear_history()
+end, { desc = "Clear translation history" })
