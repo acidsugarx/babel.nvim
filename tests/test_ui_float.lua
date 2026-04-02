@@ -180,4 +180,9 @@ T["peek mode combines enter false with auto_close"] = function()
   eq(found, true)
 end
 
+T["L keymap opens language picker"] = function()
+  local _, _, buf = capture_open_win({})
+  eq(has_keymap(buf, "L"), true)
+end
+
 return T
