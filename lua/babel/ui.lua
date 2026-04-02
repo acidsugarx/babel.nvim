@@ -2,6 +2,9 @@ local M = {}
 
 local config = require("babel.config")
 
+-- Track current open float window to prevent stacking
+local current_win = nil
+
 -- Picker priority for auto-detection
 local PICKER_PRIORITY = { "telescope", "fzf", "snacks", "mini" }
 
@@ -62,6 +65,11 @@ function M.show_float(text, original, opts)
   local allow_pin = opts.pin ~= false
   local allow_copy_original = opts.copy_original == true
 
+  -- If no close mechanism exists, force auto_close to prevent stuck floats
+  if not enter and not auto_close and auto_close_ms <= 0 then
+    auto_close = true
+  end
+
   if type(user_win_opts) ~= "table" then
     vim.notify("Babel: float.nvim_open_win must be a table", vim.log.levels.WARN)
     user_win_opts = {}
@@ -98,6 +106,17 @@ function M.show_float(text, original, opts)
   local ui_info = vim.api.nvim_list_uis()[1]
   local row = math.floor((ui_info.height - height) / 2)
   local col = math.floor((ui_info.width - width) / 2)
+  local cursor_row = vim.fn.winline()
+  local cursor_col = vim.fn.wincol()
+  local win_width = math.max(width, 20)
+  local win_height = math.max(height, 3)
+
+  -- Cursor mode: open above cursor if not enough space below
+  local cursor_mode_row = 1
+  if cursor_row + win_height + 1 > ui_info.height then
+    cursor_mode_row = -win_height
+  end
+
   local mode_opts = {
     center = {
       relative = "editor",
@@ -106,7 +125,7 @@ function M.show_float(text, original, opts)
     },
     cursor = {
       relative = "cursor",
-      row = 1,
+      row = cursor_mode_row,
       col = 0,
       anchor = "NW",
     },
@@ -125,8 +144,19 @@ function M.show_float(text, original, opts)
   }, mode_opts[mode], user_win_opts)
 
   -- Create window
+  -- Close previous float if still open to prevent stacking
+  if current_win and vim.api.nvim_win_is_valid(current_win) then
+    pcall(vim.api.nvim_win_close, current_win, true)
+    current_win = nil
+  end
   local source_buf = vim.api.nvim_get_current_buf()
-  local win = vim.api.nvim_open_win(buf, enter, win_opts)
+  local ok, win = pcall(vim.api.nvim_open_win, buf, enter, win_opts)
+  if not ok then
+    pcall(vim.api.nvim_buf_delete, buf, { force = true })
+    vim.notify("Babel: failed to open float window: " .. win, vim.log.levels.ERROR)
+    return
+  end
+  current_win = win
 
   local is_pinned = false
   local timer_generation = 0
@@ -134,6 +164,9 @@ function M.show_float(text, original, opts)
   local function close_float()
     if vim.api.nvim_win_is_valid(win) then
       vim.api.nvim_win_close(win, true)
+    end
+    if current_win == win then
+      current_win = nil
     end
   end
 
@@ -178,6 +211,11 @@ function M.show_float(text, original, opts)
     end, { buffer = buf, nowait = true })
   end
 
+  -- Open language picker from float
+  vim.keymap.set("n", "L", function()
+    M.show_lang_picker()
+  end, { buffer = buf, nowait = true })
+
   if auto_close_ms > 0 and allow_pin then
     vim.keymap.set("n", "p", function()
       is_pinned = not is_pinned
@@ -203,7 +241,9 @@ function M.show_float(text, original, opts)
       buffer = source_buf,
       once = true,
       callback = function()
-        close_float()
+        if not is_pinned then
+          close_float()
+        end
       end,
     })
 
@@ -217,6 +257,48 @@ function M.show_float(text, original, opts)
       end,
     })
   end
+end
+
+---Show language picker for source and target selection
+---@param callback? fun(source: string, target: string) Called with selected languages
+function M.show_lang_picker(callback)
+  local languages = require("babel.languages")
+  local lang_list = languages.get_list(config.options.languages)
+  local current_source = config.options.source
+  local current_target = config.options.target
+
+  local function format_entry(entry)
+    local marker = ""
+    if entry.code == current_source then
+      marker = " [source]"
+    elseif entry.code == current_target then
+      marker = " [target]"
+    end
+    return entry.label .. " (" .. entry.code .. ")" .. marker
+  end
+
+  local items = {}
+  for _, entry in ipairs(lang_list) do
+    table.insert(items, format_entry(entry))
+  end
+
+  -- Step 1: pick source
+  vim.ui.select(items, { prompt = "Source language" }, function(_, idx)
+    if not idx then return end
+    local picked_source = lang_list[idx].code
+    config.options.source = picked_source
+
+    -- Step 2: pick target
+    vim.ui.select(items, { prompt = "Target language" }, function(_, tidx)
+      if not tidx then return end
+      local picked_target = lang_list[tidx].code
+      config.options.target = picked_target
+
+      if callback then
+        callback(picked_source, picked_target)
+      end
+    end)
+  end)
 end
 
 ---Show translation using Telescope

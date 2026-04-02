@@ -34,6 +34,20 @@ function M.setup(opts)
   vim.keymap.set("n", keymaps.translate_word, function()
     M.translate_word()
   end, { desc = "Babel: Translate word" })
+
+  -- Language picker
+  if keymaps.lang then
+    vim.keymap.set("n", keymaps.lang, function()
+      M.select_languages()
+    end, { desc = "Babel: Select languages" })
+  end
+
+  -- Swap languages
+  if keymaps.swap then
+    vim.keymap.set("n", keymaps.swap, function()
+      M.swap_languages()
+    end, { desc = "Babel: Swap languages" })
+  end
 end
 
 ---Translate text
@@ -72,6 +86,22 @@ end
 ---@return table|nil
 function M.get_provider_capabilities(provider)
   return provider_capabilities.get(provider)
+end
+
+---Open language picker to change source/target
+function M.select_languages()
+  local ui = require("babel.ui")
+  ui.show_lang_picker()
+end
+
+---Swap source and target languages
+function M.swap_languages()
+  local opts = config.options
+  opts.source, opts.target = opts.target, opts.source
+  vim.notify(
+    "Babel: " .. opts.source .. " -> " .. opts.target,
+    vim.log.levels.INFO
+  )
 end
 
 return M
