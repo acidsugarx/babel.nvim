@@ -17,3 +17,11 @@ end, { desc = "Translate word under cursor" })
 vim.api.nvim_create_user_command("BabelRepeat", function()
   require("babel").repeat_last_translation()
 end, { desc = "Repeat last translation" })
+
+vim.api.nvim_create_user_command("BabelLang", function()
+  require("babel").select_languages()
+end, { desc = "Select translation languages" })
+
+vim.api.nvim_create_user_command("BabelSwap", function()
+  require("babel").swap_languages()
+end, { desc = "Swap source and target languages" })
