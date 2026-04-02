@@ -313,6 +313,8 @@ require("babel").setup({
 |--------|------|-------------|
 | `<leader>tr` | Visual | Translate selection |
 | `<leader>tw` | Normal | Translate word under cursor |
+| `<leader>tl` | Normal | Open language picker |
+| `<leader>ts` | Normal | Swap source ↔ target |
 
 ### Commands
 
@@ -322,6 +324,8 @@ require("babel").setup({
 | `:[range]Babel` | Translate selected line range (e.g. `:10,20Babel`) |
 | `:BabelWord` | Translate word under cursor |
 | `:BabelRepeat` | Repeat last translation input |
+| `:BabelLang` | Open language picker (source → target) |
+| `:BabelSwap` | Swap source and target languages |
 
 ### In Translation Window
 
@@ -331,6 +335,7 @@ require("babel").setup({
 | `y` | Copy translation to clipboard |
 | `Y` | Copy original text (if `float.copy_original = true`) |
 | `p` | Pin/unpin auto-close timer (if enabled) |
+| `L` | Open language picker |
 | `j` / `k` | Scroll |
 
 ## 🌐 Providers
