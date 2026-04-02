@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- `:BabelHistory` command and `<leader>th` keymap to browse translation history
+- `:BabelHistoryClear` command to clear history
+- `H` keymap inside translation float to open history picker
+- `history.enabled` now defaults to `true` (was `false`)
+
 ## [0.2.0] - 2026-04-03
 
 ### Added
@@ -12,15 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `:BabelSwap` command and `<leader>ts` keymap to swap source ↔ target
 - `L` keymap inside translation float to change languages
 - `languages` config option to override built-in language list (18 languages + auto-detect)
-
 - `float.enter` option to open float without focusing it (default `true`)
 - `float.auto_close` option to close float on `CursorMoved` in the source buffer (default `false`)
 - Float peek mode: `enter = false` + `auto_close = true` for non-intrusive translation popups
+
 |
-- `:BabelHistory` command and `<leader>th` keymap to browse translation history
-- `:BabelHistoryClear` command to clear history
-- `H` keymap inside translation float to open history picker
-- `history.enabled` now defaults to `true` (was `false`)### Fixed
+### Fixed
 - `CursorMoved` auto-close now respects pinned state
 - Float stacking guard: previous float closes before opening a new one
 - Cursor mode bounds check: float opens above cursor when too close to bottom
