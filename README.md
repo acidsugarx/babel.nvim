@@ -113,6 +113,8 @@ require("babel").setup({
   keymaps = {
     translate = "<leader>tr",
     translate_word = "<leader>tw",
+    lang = "<leader>tl",
+    swap = "<leader>ts",
   },
   -- DeepL provider settings (optional)
   deepl = {
@@ -151,6 +153,9 @@ require("babel").setup({
 | `deepl.api_key` | string | `nil` | DeepL API key (or use `DEEPL_API_KEY` env) |
 | `deepl.pro` | boolean | `nil` | Force Pro/Free endpoint (`nil` = auto-detect by key) |
 | `deepl.formality` | string | `"default"` | Formality: `"default"`, `"more"`, `"less"`, `"prefer_more"`, `"prefer_less"` |
+| `keymaps.lang` | string | `"<leader>tl"` | Open language picker |
+| `keymaps.swap` | string | `"<leader>ts"` | Swap source and target languages |
+| `languages` | table | `nil` | Override built-in language list (nil = use defaults) |
 
 ### Cursor-follow float preset
 
@@ -176,6 +181,36 @@ require("babel").setup({
     mode = "cursor",
     enter = false,
     auto_close = true,
+  },
+})
+```
+
+### Language picker
+
+Change source and target languages interactively:
+
+```lua
+-- Via command
+:BabelLang
+
+-- Via keymap (default <leader>tl)
+-- Press <leader>tl, select source, then target
+
+-- Swap source ↔ target
+:BabelSwap
+-- or press <leader>ts
+
+-- From inside the translation float, press L
+```
+
+Override the language list:
+
+```lua
+require("babel").setup({
+  languages = {
+    auto = "Auto-detect",
+    en = "English",
+    ru = "Russian",
   },
 })
 ```

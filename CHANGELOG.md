@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `:BabelLang` command and `<leader>tl` keymap for interactive language selection
+- `:BabelSwap` command and `<leader>ts` keymap to swap source ↔ target
+- `L` keymap inside translation float to change languages
+- `languages` config option to override built-in language list
 - `float.enter` option to open float without focusing it (default `true`)
 - `float.auto_close` option to close float on `CursorMoved` in the source buffer (default `false`)
 - `network.connect_timeout` and `network.request_timeout` options for configurable provider request time limits
