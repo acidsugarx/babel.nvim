@@ -100,10 +100,7 @@ end
 function M.swap_languages()
   local opts = config.options
   opts.source, opts.target = opts.target, opts.source
-  vim.notify(
-    "Babel: " .. opts.source .. " -> " .. opts.target,
-    vim.log.levels.INFO
-  )
+  vim.notify("Babel: " .. opts.source .. " -> " .. opts.target, vim.log.levels.INFO)
 end
 
 return M

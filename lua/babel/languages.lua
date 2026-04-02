@@ -35,8 +35,12 @@ function M.get_list(override)
     end
   end
   table.sort(result, function(a, b)
-    if a.code == "auto" then return true end
-    if b.code == "auto" then return false end
+    if a.code == "auto" then
+      return true
+    end
+    if b.code == "auto" then
+      return false
+    end
     return a.label < b.label
   end)
   return result

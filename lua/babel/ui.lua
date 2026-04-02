@@ -107,8 +107,6 @@ function M.show_float(text, original, opts)
   local row = math.floor((ui_info.height - height) / 2)
   local col = math.floor((ui_info.width - width) / 2)
   local cursor_row = vim.fn.winline()
-  local cursor_col = vim.fn.wincol()
-  local win_width = math.max(width, 20)
   local win_height = math.max(height, 3)
 
   -- Cursor mode: open above cursor if not enough space below
@@ -289,7 +287,9 @@ function M.show_lang_picker(callback)
 
   -- Step 1: pick source
   vim.ui.select(source_items, { prompt = "Source language" }, function(_, idx)
-    if not idx then return end
+    if not idx then
+      return
+    end
     local picked_source = lang_list[idx].code
     config.options.source = picked_source
 
@@ -299,7 +299,9 @@ function M.show_lang_picker(callback)
     end, lang_list)
 
     vim.ui.select(target_items, { prompt = "Target language" }, function(_, tidx)
-      if not tidx then return end
+      if not tidx then
+        return
+      end
       local picked_target = target_list[tidx].code
       config.options.target = picked_target
 
