@@ -5,15 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.0] - 2026-04-03
 
 ### Added
 - `:BabelLang` command and `<leader>tl` keymap for interactive language selection
 - `:BabelSwap` command and `<leader>ts` keymap to swap source ↔ target
 - `L` keymap inside translation float to change languages
-- `languages` config option to override built-in language list
+- `languages` config option to override built-in language list (18 languages + auto-detect)
 - `float.enter` option to open float without focusing it (default `true`)
 - `float.auto_close` option to close float on `CursorMoved` in the source buffer (default `false`)
+- Float peek mode: `enter = false` + `auto_close = true` for non-intrusive translation popups
+
+### Fixed
+- `CursorMoved` auto-close now respects pinned state
+- Float stacking guard: previous float closes before opening a new one
+- Cursor mode bounds check: float opens above cursor when too close to bottom
+- Buffer leak when `nvim_open_win` fails (pcall + cleanup)
+- Forced auto-close fallback when no close mechanism is configured
 - `network.connect_timeout` and `network.request_timeout` options for configurable provider request time limits
 - Shared curl transport layer for providers with unified `stdout/stderr/on_exit` handling
 - Provider/translate reliability tests (curl transport, Google, DeepL, and error normalization paths)
@@ -69,7 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Language selection with picker integration
 - Newline preservation in translations
 
-[Unreleased]: https://github.com/acidsugarx/babel.nvim/compare/v0.1.2...HEAD
+[0.2.0]: https://github.com/acidsugarx/babel.nvim/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/acidsugarx/babel.nvim/releases/tag/v0.1.2
 [0.1.1]: https://github.com/acidsugarx/babel.nvim/releases/tag/v0.1.1
 [0.1.0]: https://github.com/acidsugarx/babel.nvim/releases/tag/v0.1.0
