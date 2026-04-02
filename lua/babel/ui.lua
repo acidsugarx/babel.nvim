@@ -214,6 +214,11 @@ function M.show_float(text, original, opts)
     M.show_lang_picker()
   end, { buffer = buf, nowait = true })
 
+  -- Open history from float
+  vim.keymap.set("n", "H", function()
+    M.show_history()
+  end, { buffer = buf, nowait = true })
+
   if auto_close_ms > 0 and allow_pin then
     vim.keymap.set("n", "p", function()
       is_pinned = not is_pinned

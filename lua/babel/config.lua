@@ -55,6 +55,7 @@
 ---@field translate_word string Translate word under cursor (normal mode)
 ---@field lang? string Open language picker (default "<leader>tl")
 ---@field swap? string Swap source and target languages (default "<leader>ts")
+---@field history? string Open translation history (default "<leader>th")
 
 -- ============================================================================
 
@@ -75,7 +76,7 @@ local defaults = {
     limit = 200,
   },
   history = {
-    enabled = false,
+    enabled = true,
     limit = 20,
   },
   fallback_chain = {
@@ -102,6 +103,7 @@ local defaults = {
     translate_word = "<leader>tw",
     lang = "<leader>tl",
     swap = "<leader>ts",
+    history = "<leader>th",
   },
   deepl = {
     api_key = nil, -- use DEEPL_API_KEY env
