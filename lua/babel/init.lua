@@ -5,6 +5,8 @@
 ---@field translate_word fun() Translate word under cursor
 ---@field repeat_last_translation fun() Repeat last translation
 ---@field get_provider_capabilities fun(provider?: string): table|nil Get provider capability table
+---@field select_languages fun() Open language picker
+---@field swap_languages fun() Swap source and target languages
 
 ---@type BabelConfig
 local config = require("babel.config")
