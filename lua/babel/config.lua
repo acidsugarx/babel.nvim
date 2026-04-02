@@ -42,6 +42,8 @@
 ---@field mode? "center"|"cursor" Float positioning preset ('center' = screen center, 'cursor' = follow cursor)
 ---@field max_width number Maximum window width
 ---@field max_height number Maximum window height
+---@field enter? boolean Enter (focus) the float window after opening (default true)
+---@field auto_close? boolean Close float on CursorMoved in the source buffer (default false)
 ---@field auto_close_ms? number Auto-close timeout in milliseconds (0 disables)
 ---@field pin? boolean Allow pin toggle with 'p' when auto-close is enabled
 ---@field copy_original? boolean Enable copying original text with 'Y'
@@ -84,6 +86,8 @@ local defaults = {
     mode = "center",
     max_width = 80,
     max_height = 20,
+    enter = true,
+    auto_close = false,
     auto_close_ms = 0,
     pin = true,
     copy_original = false,

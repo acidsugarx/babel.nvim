@@ -56,6 +56,8 @@ function M.show_float(text, original, opts)
   opts = opts or config.options.float
   local user_win_opts = opts.nvim_open_win or {}
   local mode = opts.mode or "center"
+  local enter = opts.enter ~= false
+  local auto_close = opts.auto_close == true
   local auto_close_ms = tonumber(opts.auto_close_ms) or 0
   local allow_pin = opts.pin ~= false
   local allow_copy_original = opts.copy_original == true
@@ -123,7 +125,8 @@ function M.show_float(text, original, opts)
   }, mode_opts[mode], user_win_opts)
 
   -- Create window
-  local win = vim.api.nvim_open_win(buf, true, win_opts)
+  local source_buf = vim.api.nvim_get_current_buf()
+  local win = vim.api.nvim_open_win(buf, enter, win_opts)
 
   local is_pinned = false
   local timer_generation = 0
@@ -190,6 +193,30 @@ function M.show_float(text, original, opts)
   end
 
   schedule_auto_close()
+
+  -- Auto-close on CursorMoved in the source buffer
+  if auto_close then
+    local group = vim.api.nvim_create_augroup("BabelAutoClose" .. win, { clear = true })
+
+    vim.api.nvim_create_autocmd("CursorMoved", {
+      group = group,
+      buffer = source_buf,
+      once = true,
+      callback = function()
+        close_float()
+      end,
+    })
+
+    -- Clean up autocmd if window is closed by other means
+    vim.api.nvim_create_autocmd("WinClosed", {
+      group = group,
+      pattern = tostring(win),
+      once = true,
+      callback = function()
+        pcall(vim.api.nvim_del_augroup_by_id, group)
+      end,
+    })
+  end
 end
 
 ---Show translation using Telescope

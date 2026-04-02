@@ -103,6 +103,8 @@ require("babel").setup({
     mode = "center", -- "center" or "cursor"
     max_width = 80,
     max_height = 20,
+    enter = true, -- focus the float window (false = peek without entering)
+    auto_close = false, -- close float on CursorMoved in source buffer
     auto_close_ms = 0, -- auto-close delay, 0 = disabled
     pin = true, -- allow pin toggle with `p` when auto-close is enabled
     copy_original = false, -- allow copying original text with `Y`
@@ -140,6 +142,8 @@ require("babel").setup({
 | `display` | string | `"float"` | Display mode: `"float"` or `"picker"` |
 | `picker` | string | `"auto"` | Picker: `"auto"`, `"telescope"`, `"fzf"`, `"snacks"`, `"mini"` |
 | `float.mode` | string | `"center"` | Float preset: `"center"` or `"cursor"` |
+| `float.enter` | boolean | `true` | Focus float window (`false` = peek without entering) |
+| `float.auto_close` | boolean | `false` | Close float on `CursorMoved` in source buffer |
 | `float.auto_close_ms` | number | `0` | Auto-close timeout in milliseconds (`0` disables) |
 | `float.pin` | boolean | `true` | Enable pin toggle key (`p`) when auto-close is enabled |
 | `float.copy_original` | boolean | `false` | Enable copying original text with `Y` |
@@ -158,6 +162,20 @@ require("babel").setup({
     mode = "cursor",
     max_width = 60,
     max_height = 10,
+  },
+})
+```
+
+### Peek mode (no-enter + auto-close)
+
+Show a translation popup without entering it. The float closes automatically on the next cursor movement:
+
+```lua
+require("babel").setup({
+  float = {
+    mode = "cursor",
+    enter = false,
+    auto_close = true,
   },
 })
 ```
