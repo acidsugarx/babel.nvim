@@ -17,6 +17,7 @@
 ---@field cache? BabelCacheOptions Translation cache settings
 ---@field history? BabelHistoryOptions Translation history settings
 ---@field fallback_chain? table<string, string[]> Fallback providers by primary provider
+---@field languages? table<string, string> Override built-in language list for picker
 ---@field source string Source language ('auto' = auto-detect)
 ---@field target string Target language ('ru', 'en', etc.)
 ---@field provider string Translation provider ('google', 'deepl')
@@ -52,6 +53,8 @@
 ---@class BabelKeymaps Keybindings
 ---@field translate string Translate selection (visual mode)
 ---@field translate_word string Translate word under cursor (normal mode)
+---@field lang? string Open language picker (default "<leader>tl")
+---@field swap? string Swap source and target languages (default "<leader>ts")
 
 -- ============================================================================
 
@@ -79,6 +82,7 @@ local defaults = {
     deepl = { "google" },
     google = {},
   },
+  languages = nil, -- nil = use built-in list from babel.languages
   display = "float", -- "float" or "picker"
   picker = "auto", -- "auto", "telescope", "fzf", "snacks", "mini"
   float = {
@@ -96,6 +100,8 @@ local defaults = {
   keymaps = {
     translate = "<leader>tr",
     translate_word = "<leader>tw",
+    lang = "<leader>tl",
+    swap = "<leader>ts",
   },
   deepl = {
     api_key = nil, -- use DEEPL_API_KEY env
