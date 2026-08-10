@@ -6,12 +6,18 @@ local M = {}
 
 local path = vim.fn.stdpath("data") .. "/babel.json"
 
---- List of config keys that are safe to persist (no secrets).
+---List of config keys that are safe to persist (no secrets).
 local PERSISTED_KEYS = {
   "provider",
   "source",
   "target",
 }
+
+---Override the settings file path (useful for testing).
+---@param p string New file path
+function M.set_path(p)
+  path = p
+end
 
 ---Get the settings file path.
 ---@return string

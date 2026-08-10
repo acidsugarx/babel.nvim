@@ -99,13 +99,14 @@ T["config setup merges persisted settings"] = function()
   end)
 end
 
-T["config setup user opts override persisted"] = function()
+T["config setup persisted overrides user opts"] = function()
   with_temp_settings(function(s)
     s.save({ provider = "deepl" })
     package.loaded["babel.config"] = nil
     local config = require("babel.config")
     config.setup({ provider = "google" })
-    eq(config.options.provider, "google")
+    -- persisted wins: last interactive choice should not be killed by config
+    eq(config.options.provider, "deepl")
     package.loaded["babel.config"] = nil
   end)
 end

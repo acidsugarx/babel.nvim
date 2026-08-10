@@ -557,12 +557,29 @@ function M.show(text, original)
   end
 end
 
+---Apply provider selection: update config + persist + notify.
+---@param provider string Provider name
+---@param callback? fun(provider: string) Called with the selected provider name
+local function apply_provider(provider, callback)
+  local settings = require("babel.settings")
+  local translate = require("babel.translate")
+
+  config.options.provider = provider
+  settings.set("provider", provider)
+
+  vim.notify("Babel: provider set to " .. translate.provider_title(provider), vim.log.levels.INFO)
+
+  if callback then
+    callback(provider)
+  end
+end
+
 ---Show provider settings picker — switch the active provider (persisted).
 ---Providers are shown with status: active, available, or missing API key.
+---If a key-based provider is selected without a key, prompts for it (in-memory only).
 ---@param callback? fun(provider: string) Called with the selected provider name
 function M.show_provider_settings(callback)
   local translate = require("babel.translate")
-  local settings = require("babel.settings")
   local capabilities = require("babel.providers.capabilities")
 
   local available = translate.get_available_providers()
@@ -593,15 +610,24 @@ function M.show_provider_settings(callback)
     end
     local provider = items[idx].name
 
-    -- Update config and persist
-    config.options.provider = provider
-    settings.set("provider", provider)
-
-    vim.notify("Babel: provider set to " .. translate.provider_title(provider), vim.log.levels.INFO)
-
-    if callback then
-      callback(provider)
+    -- If provider needs a key and none is configured, prompt for it (in-memory only)
+    local caps = capabilities.get(provider) or {}
+    if caps.requires_api_key and not translate.has_provider_key(provider) then
+      vim.ui.input({
+        prompt = "DeepL API key (in-memory only — use $DEEPL_API_KEY for persistence): ",
+        default = "",
+        conceal = true,
+      }, function(input)
+        if input and input ~= "" then
+          config.options.deepl = config.options.deepl or {}
+          config.options.deepl.api_key = input
+        end
+        apply_provider(provider, callback)
+      end)
+      return
     end
+
+    apply_provider(provider, callback)
   end)
 end
 

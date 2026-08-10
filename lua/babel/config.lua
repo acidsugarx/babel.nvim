@@ -117,14 +117,16 @@ local defaults = {
 ---@type BabelOptions
 M.options = {}
 
----Initialize configuration (merge defaults + persisted + user opts)
+---Initialize configuration (merge defaults + user opts + persisted)
+---Persisted settings have the highest priority — they represent the last
+---interactive choice made by the user via :BabelSettings.
 ---@param opts? BabelOptions User settings
 function M.setup(opts)
-  -- Load persisted settings first (lowest priority), then user opts override
+  -- Order: defaults → user opts → persisted (persisted wins)
   local settings = require("babel.settings")
   local persisted = settings.load()
 
-  M.options = vim.tbl_deep_extend("force", defaults, persisted, opts or {})
+  M.options = vim.tbl_deep_extend("force", defaults, opts or {}, persisted)
 end
 
 return M

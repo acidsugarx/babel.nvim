@@ -6,9 +6,14 @@ end
 
 local function with_translate(stubs, opts, fn)
   local config = require("babel.config")
+  local settings = require("babel.settings")
   local original_notify = vim.notify
   local notifications = {}
   local shown = {}
+
+  -- Use temp settings file so tests don't pick up real persisted config
+  local original_path = settings.get_path()
+  settings.set_path(os.tmpname())
 
   vim.notify = function(msg, level)
     table.insert(notifications, { msg = msg, level = level })
@@ -35,6 +40,7 @@ local function with_translate(stubs, opts, fn)
   package.loaded["babel.ui"] = nil
   package.loaded["babel.providers.google"] = nil
   package.loaded["babel.providers.deepl"] = nil
+  settings.set_path(original_path)
 
   assert(ok, err)
 end

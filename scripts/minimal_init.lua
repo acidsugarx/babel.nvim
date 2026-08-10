@@ -14,3 +14,6 @@ vim.opt.rtp:append(deps_path .. "/mini.test")
 
 -- Setup mini.test
 require("mini.test").setup()
+
+-- Point settings.json to a temp file so tests don't pick up real persisted config
+require("babel.settings").set_path(os.tmpname())
