@@ -1,3 +1,5 @@
+<a href="README.es-ES.md">Español</a> | English
+
 <div align="center">
 
 # 🌍 babel.nvim
