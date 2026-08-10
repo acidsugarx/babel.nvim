@@ -11,8 +11,13 @@
 ---@field pro? boolean Force Pro endpoint (auto-detect by default)
 ---@field formality? "default"|"more"|"less"|"prefer_more"|"prefer_less"
 
+---@class BabelYandexOptions Yandex provider settings
+---@field iam_token? string IAM token (overrides YANDEX_TRANSLATE_IAM_TOKEN env)
+---@field folder_id? string Folder ID (overrides YANDEX_FOLDER_ID env)
+
 ---@class BabelOptions Plugin settings
 ---@field deepl? BabelDeeplOptions
+---@field yandex? BabelYandexOptions
 ---@field network? BabelNetworkOptions Network request settings
 ---@field cache? BabelCacheOptions Translation cache settings
 ---@field history? BabelHistoryOptions Translation history settings
@@ -20,7 +25,7 @@
 ---@field languages? table<string, string> Override built-in language list for picker
 ---@field source string Source language ('auto' = auto-detect)
 ---@field target string Target language ('ru', 'en', etc.)
----@field provider string Translation provider ('google', 'deepl')
+---@field provider string Translation provider ('google', 'deepl', 'yandex')
 ---@field display "float"|"picker" Display mode ('float' = floating window, 'picker' = use picker)
 ---@field picker "auto"|"telescope"|"fzf"|"snacks"|"mini" Picker to use (when display = "picker")
 ---@field float BabelFloatOptions Floating window options
@@ -82,6 +87,7 @@ local defaults = {
   },
   fallback_chain = {
     deepl = { "google" },
+    yandex = { "google" },
     google = {},
   },
   languages = nil, -- nil = use built-in list from babel.languages
@@ -111,6 +117,10 @@ local defaults = {
     api_key = nil, -- use DEEPL_API_KEY env
     pro = nil, -- auto-detect by key suffix
     formality = "default",
+  },
+  yandex = {
+    iam_token = nil, -- use YANDEX_TRANSLATE_IAM_TOKEN env
+    folder_id = nil, -- use YANDEX_FOLDER_ID env
   },
 }
 

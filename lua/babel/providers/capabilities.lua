@@ -15,6 +15,13 @@ local CAPABILITIES = {
     supports_fallback = true,
     supports_cache = true,
   },
+  yandex = {
+    supports_formality = false,
+    supports_auto_source = true,
+    requires_api_key = true,
+    supports_fallback = true,
+    supports_cache = true,
+  },
 }
 
 ---Get capability table for one provider or all providers

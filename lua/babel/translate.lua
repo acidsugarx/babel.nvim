@@ -14,6 +14,7 @@ local state = {
 local providers = {
   google = require("babel.providers.google"),
   deepl = require("babel.providers.deepl"),
+  yandex = require("babel.providers.yandex"),
 }
 
 ---Get providers by name
@@ -27,6 +28,7 @@ local function provider_title(name)
   local titles = {
     google = "Google",
     deepl = "DeepL",
+    yandex = "Yandex",
   }
   return titles[name] or name
 end
@@ -42,12 +44,11 @@ local function normalize_provider_error(provider_name, err)
   return string.format("%s: %s", prefix, tostring(err or "unknown provider error"))
 end
 
-local function is_deepl_missing_key(err)
+local function is_missing_key_error(err)
   if type(err) == "table" then
-    return err.code == "missing_api_key"
+    return err.code == "missing_api_key" or err.code == "missing_folder_id"
   end
-
-  return tostring(err or ""):match("API key") ~= nil
+  return tostring(err or ""):match("API key") ~= nil or tostring(err or ""):match("IAM token") ~= nil
 end
 
 local function get_cache_opts()
@@ -254,8 +255,15 @@ function M.translate(text)
       if err then
         local next_provider_name = providers_to_try[index + 1]
         if next_provider_name then
-          if provider_name == "deepl" and next_provider_name == "google" and is_deepl_missing_key(err) then
-            vim.notify("Babel: DeepL API key not found, falling back to Google", vim.log.levels.WARN)
+          if is_missing_key_error(err) then
+            vim.notify(
+              string.format(
+                "Babel: %s credentials not found, falling back to %s",
+                provider_title(provider_name),
+                provider_title(next_provider_name)
+              ),
+              vim.log.levels.WARN
+            )
           else
             local message = type(err) == "table" and (err.message or err.code or "provider error") or tostring(err)
             local notify_message = string.format(
@@ -343,6 +351,13 @@ function M.has_provider_key(name)
       return true
     end
     return os.getenv("DEEPL_API_KEY") ~= nil
+  end
+  if name == "yandex" then
+    local yandex_opts = config.options.yandex or {}
+    if yandex_opts.iam_token and yandex_opts.folder_id then
+      return true
+    end
+    return os.getenv("YANDEX_TRANSLATE_IAM_TOKEN") ~= nil and os.getenv("YANDEX_FOLDER_ID") ~= nil
   end
   return false
 end

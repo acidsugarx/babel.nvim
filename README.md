@@ -126,6 +126,11 @@ require("babel").setup({
     pro = nil,            -- nil = auto-detect, true = Pro, false = Free
     formality = "default", -- "default", "more", "less", "prefer_more", "prefer_less"
   },
+  -- Yandex provider settings (optional)
+  yandex = {
+    iam_token = nil,      -- or use YANDEX_TRANSLATE_IAM_TOKEN env variable
+    folder_id = nil,      -- or use YANDEX_FOLDER_ID env variable
+  },
 })
 ```
 
@@ -157,6 +162,8 @@ require("babel").setup({
 | `deepl.api_key` | string | `nil` | DeepL API key (or use `DEEPL_API_KEY` env) |
 | `deepl.pro` | boolean | `nil` | Force Pro/Free endpoint (`nil` = auto-detect by key) |
 | `deepl.formality` | string | `"default"` | Formality: `"default"`, `"more"`, `"less"`, `"prefer_more"`, `"prefer_less"` |
+| `yandex.iam_token` | string | `nil` | Yandex IAM token (or use `YANDEX_TRANSLATE_IAM_TOKEN`) |
+| `yandex.folder_id` | string | `nil` | Yandex folder ID (or use `YANDEX_FOLDER_ID`) |
 | `keymaps.lang` | string | `"<leader>tl"` | Open language picker |
 | `keymaps.swap` | string | `"<leader>ts"` | Swap source and target languages |
 | `keymaps.history` | string | `"<leader>th"` | Open translation history |
@@ -370,8 +377,8 @@ Only non-sensitive settings (provider, source, target) are persisted. API keys a
 |----------|:------:|:-------:|-------|
 | Google Translate | ✅ | No | Default, unofficial API |
 | [DeepL](https://deepl.com) | 🧪 | Yes (free tier) | Best quality, 500k chars/month free |
+| [Yandex](https://cloud.yandex.com/en/services/translate) | 🧪 | Yes (IAM token) | Great for Russian, Yandex Cloud API |
 | [LibreTranslate](https://libretranslate.com) | 🔜 | No | Open source, self-hostable |
-| [Yandex](https://translate.yandex.ru) | 🔜 | Yes | Great for Russian |
 | [Lingva](https://lingva.ml) | 🔜 | No | Google proxy, no rate limits |
 
 ### Provider capabilities
@@ -413,6 +420,34 @@ local deepl = require("babel").get_provider_capabilities("deepl")
 3. The endpoint (Free/Pro) is auto-detected from the key suffix (`:fx` = Free). You can override with `deepl.pro = true/false`.
 
 4. If no API key is found, babel.nvim will automatically fall back to Google Translate with a warning.
+
+</details>
+
+<details>
+<summary>Yandex Setup</summary>
+
+1. Create a Yandex Cloud account and get an IAM token + folder ID at [cloud.yandex.com](https://cloud.yandex.com/en/docs/translate/quickstart)
+
+2. Set up credentials (choose one):
+
+   **Option A:** Environment variables
+   ```bash
+   export YANDEX_TRANSLATE_IAM_TOKEN="your-iam-token"
+   export YANDEX_FOLDER_ID="your-folder-id"
+   ```
+
+   **Option B:** In config
+   ```lua
+   require("babel").setup({
+     provider = "yandex",
+     yandex = {
+       iam_token = "your-iam-token",
+       folder_id = "your-folder-id",
+     },
+   })
+   ```
+
+3. If credentials are missing, babel.nvim will automatically fall back to Google Translate with a warning.
 
 </details>
 
