@@ -82,6 +82,8 @@ function M.translate(text, source, target, callback)
       end
     end
 
+    -- Restore newlines: Google may strip surrounding spaces from the marker,
+    -- so try the full marker first, then the bare token as fallback.
     translated = translated:gsub(NEWLINE_MARKER, "\n")
     translated = translated:gsub("@@000@@", "\n")
 

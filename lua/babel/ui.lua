@@ -5,6 +5,22 @@ local config = require("babel.config")
 -- Track current open float window to prevent stacking
 local current_win = nil
 
+-- Define highlight groups with default = true so users/colorschemes can override
+local function setup_highlights()
+  vim.api.nvim_set_hl(0, "BabelNormal", { link = "NormalFloat", default = true })
+  vim.api.nvim_set_hl(0, "BabelBorder", { link = "FloatBorder", default = true })
+  vim.api.nvim_set_hl(0, "BabelTitle", { link = "FloatTitle", default = true })
+end
+
+setup_highlights()
+
+-- Re-apply highlights on colorscheme change (lazy.nvim pattern)
+vim.api.nvim_create_autocmd("ColorScheme", {
+  callback = function()
+    setup_highlights()
+  end,
+})
+
 -- Picker priority for auto-detection
 local PICKER_PRIORITY = { "telescope", "fzf", "snacks", "mini" }
 
@@ -99,19 +115,22 @@ function M.show_float(text, original, opts)
   local buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
   vim.bo[buf].modifiable = false
+  vim.bo[buf].swapfile = false
   vim.bo[buf].bufhidden = "wipe"
+  vim.bo[buf].buftype = "nofile"
   vim.bo[buf].filetype = "babel"
 
   -- Calculate centered position
-  local ui_info = vim.api.nvim_list_uis()[1]
-  local row = math.floor((ui_info.height - height) / 2)
-  local col = math.floor((ui_info.width - width) / 2)
+  local total_lines = vim.o.lines
+  local total_columns = vim.o.columns
+  local row = math.floor((total_lines - height) / 2)
+  local col = math.floor((total_columns - width) / 2)
   local cursor_row = vim.fn.winline()
   local win_height = math.max(height, 3)
 
   -- Cursor mode: open above cursor if not enough space below
   local cursor_mode_row = 1
-  if cursor_row + win_height + 1 > ui_info.height then
+  if cursor_row + win_height + 1 > total_lines then
     cursor_mode_row = -win_height
   end
 
@@ -129,6 +148,9 @@ function M.show_float(text, original, opts)
     },
   }
 
+  local border = opts.border or "rounded"
+  local has_border = border ~= "none" and border ~= ""
+
   local win_opts = vim.tbl_deep_extend("force", {
     relative = "editor",
     width = math.max(width, 20),
@@ -136,9 +158,11 @@ function M.show_float(text, original, opts)
     row = row,
     col = col,
     style = "minimal",
-    border = opts.border or "rounded",
-    title = " Translation ",
-    title_pos = "center",
+    border = border,
+    zindex = 50,
+    -- title/footer only render with a border (snacks.nvim pattern)
+    title = has_border and " Translation " or nil,
+    title_pos = has_border and "center" or nil,
   }, mode_opts[mode], user_win_opts)
 
   -- Create window
@@ -184,9 +208,16 @@ function M.show_float(text, original, opts)
     end, auto_close_ms)
   end
 
-  -- Window options
+  -- Window options — minimal float preset + theme via winhighlight
   vim.wo[win].wrap = true
   vim.wo[win].cursorline = false
+  vim.wo[win].spell = false
+  vim.wo[win].signcolumn = "no"
+  vim.wo[win].foldcolumn = "0"
+  vim.wo[win].colorcolumn = ""
+  vim.wo[win].number = false
+  vim.wo[win].relativenumber = false
+  vim.wo[win].winhighlight = "Normal:BabelNormal,FloatBorder:BabelBorder,FloatTitle:BabelTitle"
 
   -- Keymaps to close
   local close_keys = { "q", "<Esc>", "<CR>" }
@@ -235,6 +266,25 @@ function M.show_float(text, original, opts)
 
   schedule_auto_close()
 
+  -- Reposition float on terminal resize (lazy.nvim / snacks.nvim pattern)
+  local resize_group = vim.api.nvim_create_augroup("BabelResize" .. win, { clear = true })
+  vim.api.nvim_create_autocmd("VimResized", {
+    group = resize_group,
+    callback = function()
+      if not vim.api.nvim_win_is_valid(win) then
+        return true
+      end
+      local new_height = math.min(#lines, opts.max_height or 20)
+      if mode == "center" then
+        vim.api.nvim_win_set_config(win, {
+          relative = "editor",
+          row = math.floor((vim.o.lines - new_height) / 2),
+          col = math.floor((vim.o.columns - math.max(width, 20)) / 2),
+        })
+      end
+    end,
+  })
+
   -- Auto-close on CursorMoved in the source buffer
   if auto_close then
     local group = vim.api.nvim_create_augroup("BabelAutoClose" .. win, { clear = true })
@@ -260,6 +310,16 @@ function M.show_float(text, original, opts)
       end,
     })
   end
+
+  -- Clean up resize autocmd on window close
+  vim.api.nvim_create_autocmd("WinClosed", {
+    group = resize_group,
+    pattern = tostring(win),
+    once = true,
+    callback = function()
+      pcall(vim.api.nvim_del_augroup_by_id, resize_group)
+    end,
+  })
 end
 
 ---Show language picker for source and target selection
@@ -280,34 +340,40 @@ function M.show_lang_picker(callback)
     return entry.label .. " (" .. entry.code .. ")" .. marker
   end
 
-  local source_items = {}
-  local target_items = {}
+  -- Source candidates: include "auto"
+  local source_entries = {}
   for _, entry in ipairs(lang_list) do
-    table.insert(source_items, format_entry(entry))
-    -- Exclude "auto" from target selection — target must be explicit
-    if entry.code ~= "auto" then
-      table.insert(target_items, format_entry(entry))
-    end
+    table.insert(source_entries, { label = format_entry(entry), code = entry.code })
   end
+  local source_labels = vim.tbl_map(function(e)
+    return e.label
+  end, source_entries)
+
+  -- Target candidates: exclude "auto" (target must be explicit)
+  local target_entries = vim
+    .iter(lang_list)
+    :filter(function(entry)
+      return entry.code ~= "auto"
+    end)
+    :totable()
+  local target_labels = vim.tbl_map(function(e)
+    return format_entry(e)
+  end, target_entries)
 
   -- Step 1: pick source
-  vim.ui.select(source_items, { prompt = "Source language" }, function(_, idx)
+  vim.ui.select(source_labels, { prompt = "Source language" }, function(_, idx)
     if not idx then
       return
     end
-    local picked_source = lang_list[idx].code
+    local picked_source = source_entries[idx].code
     config.options.source = picked_source
 
     -- Step 2: pick target (no "auto" option)
-    local target_list = vim.tbl_filter(function(e)
-      return e.code ~= "auto"
-    end, lang_list)
-
-    vim.ui.select(target_items, { prompt = "Target language" }, function(_, tidx)
+    vim.ui.select(target_labels, { prompt = "Target language" }, function(_, tidx)
       if not tidx then
         return
       end
-      local picked_target = target_list[tidx].code
+      local picked_target = target_entries[tidx].code
       config.options.target = picked_target
 
       if callback then

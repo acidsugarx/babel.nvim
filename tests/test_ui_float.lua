@@ -57,6 +57,12 @@ local function capture_open_win(float_opts)
     return 1
   end
 
+  -- Stub screen dimensions (code uses vim.o.lines / vim.o.columns)
+  local original_lines = vim.o.lines
+  local original_columns = vim.o.columns
+  vim.o.lines = 40
+  vim.o.columns = 120
+
   local ok, err = pcall(ui.show_float, "translated text", "original")
 
   api.nvim_list_uis = original_list_uis
@@ -64,6 +70,8 @@ local function capture_open_win(float_opts)
   vim.notify = original_notify
   api.nvim_create_autocmd = original_create_autocmd
   api.nvim_create_augroup = original_create_augroup
+  vim.o.lines = original_lines
+  vim.o.columns = original_columns
 
   assert(ok, err)
 
