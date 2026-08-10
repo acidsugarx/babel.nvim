@@ -128,8 +128,9 @@ require("babel").setup({
   },
   -- Yandex provider settings (optional)
   yandex = {
-    iam_token = nil,      -- or use YANDEX_TRANSLATE_IAM_TOKEN env variable
-    folder_id = nil,      -- or use YANDEX_FOLDER_ID env variable
+    api_key = nil,       -- or use YANDEX_TRANSLATE_API_KEY env variable (recommended)
+    iam_token = nil,     -- or use YANDEX_TRANSLATE_IAM_TOKEN env variable (expires ~12h)
+    folder_id = nil,     -- or use YANDEX_FOLDER_ID env variable
   },
 })
 ```
@@ -162,7 +163,8 @@ require("babel").setup({
 | `deepl.api_key` | string | `nil` | DeepL API key (or use `DEEPL_API_KEY` env) |
 | `deepl.pro` | boolean | `nil` | Force Pro/Free endpoint (`nil` = auto-detect by key) |
 | `deepl.formality` | string | `"default"` | Formality: `"default"`, `"more"`, `"less"`, `"prefer_more"`, `"prefer_less"` |
-| `yandex.iam_token` | string | `nil` | Yandex IAM token (or use `YANDEX_TRANSLATE_IAM_TOKEN`) |
+| `yandex.api_key` | string | `nil` | Yandex API key (or use `YANDEX_TRANSLATE_API_KEY`) |
+| `yandex.iam_token` | string | `nil` | Yandex IAM token (or use `YANDEX_TRANSLATE_IAM_TOKEN`; expires ~12h) |
 | `yandex.folder_id` | string | `nil` | Yandex folder ID (or use `YANDEX_FOLDER_ID`) |
 | `keymaps.lang` | string | `"<leader>tl"` | Open language picker |
 | `keymaps.swap` | string | `"<leader>ts"` | Swap source and target languages |
@@ -432,7 +434,7 @@ local deepl = require("babel").get_provider_capabilities("deepl")
 
    **Option A:** Environment variables
    ```bash
-   export YANDEX_TRANSLATE_IAM_TOKEN="your-iam-token"
+   export YANDEX_TRANSLATE_API_KEY="your-api-key"
    export YANDEX_FOLDER_ID="your-folder-id"
    ```
 
@@ -441,13 +443,13 @@ local deepl = require("babel").get_provider_capabilities("deepl")
    require("babel").setup({
      provider = "yandex",
      yandex = {
-       iam_token = "your-iam-token",
+       api_key = "your-api-key",
        folder_id = "your-folder-id",
      },
    })
    ```
 
-3. If credentials are missing, babel.nvim will automatically fall back to Google Translate with a warning.
+3. API key (recommended) doesn't expire. Alternatively, use an IAM token (`YANDEX_TRANSLATE_IAM_TOKEN`) which expires ~12h. If credentials are missing, babel.nvim will automatically fall back to Google Translate with a warning.
 
 </details>
 

@@ -354,10 +354,12 @@ function M.has_provider_key(name)
   end
   if name == "yandex" then
     local yandex_opts = config.options.yandex or {}
-    if yandex_opts.iam_token and yandex_opts.folder_id then
-      return true
-    end
-    return os.getenv("YANDEX_TRANSLATE_IAM_TOKEN") ~= nil and os.getenv("YANDEX_FOLDER_ID") ~= nil
+    local has_auth = yandex_opts.api_key
+      or yandex_opts.iam_token
+      or os.getenv("YANDEX_TRANSLATE_API_KEY")
+      or os.getenv("YANDEX_TRANSLATE_IAM_TOKEN")
+    local has_folder = yandex_opts.folder_id or os.getenv("YANDEX_FOLDER_ID")
+    return has_auth ~= nil and has_folder ~= nil
   end
   return false
 end

@@ -5,7 +5,19 @@ local curl = require("babel.providers.curl")
 
 local ENDPOINT = "https://translate.api.cloud.yandex.net/translate/v2/translate"
 
+---Get API key from config or YANDEX_TRANSLATE_API_KEY env.
+---API key is the simplest auth method (doesn't expire).
+---@return string|nil
+local function get_api_key()
+  local yandex_opts = config.options.yandex or {}
+  if yandex_opts.api_key then
+    return yandex_opts.api_key
+  end
+  return os.getenv("YANDEX_TRANSLATE_API_KEY")
+end
+
 ---Get IAM token from config or YANDEX_TRANSLATE_IAM_TOKEN env.
+---IAM tokens expire (~12h), prefer API key when possible.
 ---@return string|nil
 local function get_iam_token()
   local yandex_opts = config.options.yandex or {}
@@ -41,14 +53,21 @@ end
 ---@param target string Target language code
 ---@param callback fun(result: string|nil, err: table|string|nil) Callback with translated text
 function M.translate(text, source, target, callback)
+  local api_key = get_api_key()
   local iam_token = get_iam_token()
   local folder_id = get_folder_id()
 
-  if not iam_token then
+  -- Prefer API key (doesn't expire); fall back to IAM token
+  local auth_header
+  if api_key then
+    auth_header = "Authorization: Api-Key " .. api_key
+  elseif iam_token then
+    auth_header = "Authorization: Bearer " .. iam_token
+  else
     callback(nil, {
       code = "missing_api_key",
       provider = "yandex",
-      message = "IAM token not found",
+      message = "API key or IAM token not found",
     })
     return
   end
@@ -69,11 +88,6 @@ function M.translate(text, source, target, callback)
     folderId = folder_id,
   }
 
-  -- Remove nil fields so vim.json.encode doesn't produce "null"
-  if body.sourceLanguageCode == nil then
-    body.sourceLanguageCode = nil
-  end
-
   local network_opts = config.options.network or {}
   local timeout_args, _, request_timeout = curl.timeout_args(network_opts)
 
@@ -86,7 +100,7 @@ function M.translate(text, source, target, callback)
     "-X",
     "POST",
     "-H",
-    "Authorization: Bearer " .. iam_token,
+    auth_header,
     "-H",
     "Content-Type: application/json",
     "-d",

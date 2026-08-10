@@ -12,7 +12,8 @@
 ---@field formality? "default"|"more"|"less"|"prefer_more"|"prefer_less"
 
 ---@class BabelYandexOptions Yandex provider settings
----@field iam_token? string IAM token (overrides YANDEX_TRANSLATE_IAM_TOKEN env)
+---@field api_key? string API key (overrides YANDEX_TRANSLATE_API_KEY env; simplest auth)
+---@field iam_token? string IAM token (overrides YANDEX_TRANSLATE_IAM_TOKEN env; expires ~12h)
 ---@field folder_id? string Folder ID (overrides YANDEX_FOLDER_ID env)
 
 ---@class BabelOptions Plugin settings
@@ -119,7 +120,8 @@ local defaults = {
     formality = "default",
   },
   yandex = {
-    iam_token = nil, -- use YANDEX_TRANSLATE_IAM_TOKEN env
+    api_key = nil, -- use YANDEX_TRANSLATE_API_KEY env (recommended)
+    iam_token = nil, -- use YANDEX_TRANSLATE_IAM_TOKEN env (expires ~12h)
     folder_id = nil, -- use YANDEX_FOLDER_ID env
   },
 }

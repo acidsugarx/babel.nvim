@@ -28,10 +28,10 @@ local function with_yandex(stub_curl, setup_opts, fn)
   assert(ok, err)
 end
 
-T["returns missing_api_key when no IAM token configured"] = function()
+T["returns missing_api_key when no auth configured"] = function()
   local original_getenv = os.getenv
   os.getenv = function(name)
-    if name == "YANDEX_TRANSLATE_IAM_TOKEN" or name == "YANDEX_FOLDER_ID" then
+    if name == "YANDEX_TRANSLATE_API_KEY" or name == "YANDEX_TRANSLATE_IAM_TOKEN" or name == "YANDEX_FOLDER_ID" then
       return nil
     end
     return original_getenv(name)
@@ -39,9 +39,9 @@ T["returns missing_api_key when no IAM token configured"] = function()
 
   local ok, err = pcall(function()
     with_yandex(function()
-      error("curl.run should not be called without IAM token")
+      error("curl.run should not be called without auth")
     end, {
-      yandex = { iam_token = nil, folder_id = nil },
+      yandex = { api_key = nil, iam_token = nil, folder_id = nil },
     }, function(yandex)
       local result, callback_err
       yandex.translate("hello", "auto", "ru", function(r, e)
