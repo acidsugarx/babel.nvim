@@ -557,4 +557,52 @@ function M.show(text, original)
   end
 end
 
+---Show provider settings picker — switch the active provider (persisted).
+---Providers are shown with status: active, available, or missing API key.
+---@param callback? fun(provider: string) Called with the selected provider name
+function M.show_provider_settings(callback)
+  local translate = require("babel.translate")
+  local settings = require("babel.settings")
+  local capabilities = require("babel.providers.capabilities")
+
+  local available = translate.get_available_providers()
+  local current = config.options.provider
+
+  local items = {}
+  for _, name in ipairs(available) do
+    local caps = capabilities.get(name) or {}
+    local status
+    if name == current then
+      status = " (active)"
+    elseif caps.requires_api_key and not translate.has_provider_key(name) then
+      status = " (no API key)"
+    else
+      status = ""
+    end
+    local label = translate.provider_title(name) .. status
+    table.insert(items, { label = label, name = name })
+  end
+
+  local labels = vim.tbl_map(function(e)
+    return e.label
+  end, items)
+
+  vim.ui.select(labels, { prompt = "Translation provider" }, function(_, idx)
+    if not idx then
+      return
+    end
+    local provider = items[idx].name
+
+    -- Update config and persist
+    config.options.provider = provider
+    settings.set("provider", provider)
+
+    vim.notify("Babel: provider set to " .. translate.provider_title(provider), vim.log.levels.INFO)
+
+    if callback then
+      callback(provider)
+    end
+  end)
+end
+
 return M

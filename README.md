@@ -117,6 +117,8 @@ require("babel").setup({
     translate_word = "<leader>tw",
     lang = "<leader>tl",
     swap = "<leader>ts",
+    history = "<leader>th",
+    provider = "<leader>tp",
   },
   -- DeepL provider settings (optional)
   deepl = {
@@ -157,6 +159,8 @@ require("babel").setup({
 | `deepl.formality` | string | `"default"` | Formality: `"default"`, `"more"`, `"less"`, `"prefer_more"`, `"prefer_less"` |
 | `keymaps.lang` | string | `"<leader>tl"` | Open language picker |
 | `keymaps.swap` | string | `"<leader>ts"` | Swap source and target languages |
+| `keymaps.history` | string | `"<leader>th"` | Open translation history |
+| `keymaps.provider` | string | `"<leader>tp"` | Open provider settings |
 | `languages` | table | `nil` | Override built-in language list (nil = use defaults) |
 
 ### Cursor-follow float preset
@@ -318,6 +322,7 @@ require("babel").setup({
 | `<leader>tl` | Normal | Open language picker |
 | `<leader>ts` | Normal | Swap source ↔ target |
 | `<leader>th` | Normal | Translation history |
+| `<leader>tp` | Normal | Provider settings |
 
 ### Commands
 
@@ -331,6 +336,7 @@ require("babel").setup({
 | `:BabelSwap` | Swap source and target languages |
 | `:BabelHistory` | Browse translation history |
 | `:BabelHistoryClear` | Clear translation history |
+| `:BabelSettings` | Open provider settings (persisted) |
 
 ### In Translation Window
 
@@ -343,6 +349,20 @@ require("babel").setup({
 | `L` | Open language picker |
 | `H` | Open translation history |
 | `j` / `k` | Scroll |
+
+### Provider settings
+
+Switch the active translation provider interactively. The selection is **persisted** across sessions in `stdpath("data")/babel.json`:
+
+```lua
+-- Via command
+:BabelSettings
+
+-- Via keymap (default <leader>tp)
+-- Press <leader>tp, select provider
+```
+
+Only non-sensitive settings (provider, source, target) are persisted. API keys are never written to disk — configure them via env vars (`DEEPL_API_KEY`) or `setup()`.
 
 ## 🌐 Providers
 

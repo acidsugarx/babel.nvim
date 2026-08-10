@@ -56,6 +56,7 @@
 ---@field lang? string Open language picker (default "<leader>tl")
 ---@field swap? string Swap source and target languages (default "<leader>ts")
 ---@field history? string Open translation history (default "<leader>th")
+---@field provider? string Open provider settings (default "<leader>tp")
 
 -- ============================================================================
 
@@ -104,6 +105,7 @@ local defaults = {
     lang = "<leader>tl",
     swap = "<leader>ts",
     history = "<leader>th",
+    provider = "<leader>tp",
   },
   deepl = {
     api_key = nil, -- use DEEPL_API_KEY env
@@ -115,10 +117,14 @@ local defaults = {
 ---@type BabelOptions
 M.options = {}
 
----Initialize configuration (merge defaults + user opts)
+---Initialize configuration (merge defaults + persisted + user opts)
 ---@param opts? BabelOptions User settings
 function M.setup(opts)
-  M.options = vim.tbl_deep_extend("force", defaults, opts or {})
+  -- Load persisted settings first (lowest priority), then user opts override
+  local settings = require("babel.settings")
+  local persisted = settings.load()
+
+  M.options = vim.tbl_deep_extend("force", defaults, persisted, opts or {})
 end
 
 return M

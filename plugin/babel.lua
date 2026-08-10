@@ -33,3 +33,7 @@ end, { desc = "Translation history" })
 vim.api.nvim_create_user_command("BabelHistoryClear", function()
   require("babel").clear_history()
 end, { desc = "Clear translation history" })
+
+vim.api.nvim_create_user_command("BabelSettings", function()
+  require("babel").select_provider()
+end, { desc = "Open provider settings" })

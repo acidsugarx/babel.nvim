@@ -311,4 +311,40 @@ function M.clear_cache()
   state.cache_keys = {}
 end
 
+---Get list of available provider names (registry order).
+---@return string[]
+function M.get_available_providers()
+  local names = {}
+  for name, _ in pairs(providers) do
+    table.insert(names, name)
+  end
+  table.sort(names)
+  return names
+end
+
+---Get human-readable title for a provider.
+---@param name string Provider name
+---@return string
+function M.provider_title(name)
+  return provider_title(name)
+end
+
+---Check if a provider has its API key configured (if required).
+---@param name string Provider name
+---@return boolean
+function M.has_provider_key(name)
+  local caps = require("babel.providers.capabilities").get(name) or {}
+  if not caps.requires_api_key then
+    return true
+  end
+  if name == "deepl" then
+    local deepl_opts = config.options.deepl or {}
+    if deepl_opts.api_key then
+      return true
+    end
+    return os.getenv("DEEPL_API_KEY") ~= nil
+  end
+  return false
+end
+
 return M
