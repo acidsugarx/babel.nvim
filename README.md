@@ -316,7 +316,6 @@ require("babel").setup({
 | `<leader>tl` | Normal | Open language picker |
 | `<leader>ts` | Normal | Swap source ↔ target |
 | `<leader>th` | Normal | Translation history |
-| `<leader>th` | Normal | Translation history |
 
 ### Commands
 
@@ -328,8 +327,6 @@ require("babel").setup({
 | `:BabelRepeat` | Repeat last translation input |
 | `:BabelLang` | Open language picker (source → target) |
 | `:BabelSwap` | Swap source and target languages |
-| `:BabelHistory` | Browse translation history |
-| `:BabelHistoryClear` | Clear translation history |
 | `:BabelHistory` | Browse translation history |
 | `:BabelHistoryClear` | Clear translation history |
 

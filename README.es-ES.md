@@ -318,7 +318,6 @@ require("babel").setup({
 | `<leader>tl` | Normal | Abrir selector de idioma |
 | `<leader>ts` | Normal | Intercambiar origen ↔ objetivo |
 | `<leader>th` | Normal | Historial de traducciones |
-| `<leader>th` | Normal | Historial de traducciones |
 
 ### Comandos
 
@@ -330,8 +329,6 @@ require("babel").setup({
 | `:BabelRepeat` | Repetir última entrada de traducción |
 | `:BabelLang` | Abrir selector de idioma (origen → objetivo) |
 | `:BabelSwap` | Intercambiar idiomas de origen y objetivo |
-| `:BabelHistory` | Examinar historial de traducciones |
-| `:BabelHistoryClear` | Borrar historial de traducciones |
 | `:BabelHistory` | Examinar historial de traducciones |
 | `:BabelHistoryClear` | Borrar historial de traducciones |
 
